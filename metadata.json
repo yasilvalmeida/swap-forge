@@ -1,0 +1,21 @@
+{
+  "name": "Pincha Coin",
+  "symbol": "PNCH",
+  "description": "Pincha Coin is a new meme token that aims to blend humour with cryptocurrency, offering a fun and engaging digital asset for meme enthusiasts and investors alike. Its playful nature and community-driven approach make it a unique addition to the crypto world.",
+  "image": "https://gateway.pinata.cloud/ipfs/QmUcBm51PSgLSfpBRMmxQschcrMjcQvxoNjiNw8w5Un2yd",
+  "extensions": {
+    "website": "https://coinfactory.app",
+    "twitter": "https://twitter.com/coinfactory_app"
+  },
+  "tags": [
+    "Meme",
+    "Tokenization",
+    "Airdrop"
+  ],
+  "creator": {
+    "name": "CoinFactory",
+    "site": "https://coinfactory.app"
+  },
+  "coverImage": "https://gateway.pinata.cloud/ipfs/QmTQQeG8ChCV3SbMfhk1JGv3zAqSg25HeKgz8TJAeUDbVV",
+  "youtubeVideo": "https://www.youtube.com/watch?v=gDIpyBH4Hnw"
+}
