@@ -39,7 +39,7 @@ import {
 } from '@/lib/constants/token';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { TokenFormData } from './create-token.schema';
+import { TokenFormData } from '@/lib/validation/token';
 import { DragAndDrop } from '@/components/ui/drag-and-drop';
 import { TagsInput } from '@/components/ui/tags-input';
 import {
@@ -77,7 +77,7 @@ import {
 } from '@/lib/models/token';
 import dotenv from 'dotenv';
 import bs58 from 'bs58';
-import { getStats, updateStats } from '@/lib/utils/stats';
+import { updateStats } from '@/lib/utils/stats';
 
 dotenv.config();
 
@@ -87,7 +87,7 @@ const Footer = dynamic(() => import('@/layout/footer'), {});
 
 export default function CreateTokenPage() {
   const [schema, setSchema] = useState<
-    typeof import('./create-token.schema').tokenFormSchema | null
+    typeof import('@/lib/validation/token').tokenFormSchema | null
   >(null);
 
   const {
@@ -330,7 +330,7 @@ export default function CreateTokenPage() {
   };
 
   useEffect(() => {
-    import('./create-token.schema').then((module) => {
+    import('@/lib/validation/token').then((module) => {
       setSchema(module.tokenFormSchema);
     });
   }, []);

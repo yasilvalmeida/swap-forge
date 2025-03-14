@@ -13,7 +13,7 @@ import {
   mintTo,
   TOKEN_2022_PROGRAM_ID,
 } from '@solana/spl-token';
-import { createSignerFromKeypair, publicKey } from '@metaplex-foundation/umi';
+/* import { createSignerFromKeypair, publicKey } from '@metaplex-foundation/umi'; */
 import { ErrorResponseDto, SuccessResponseDto } from '@/lib/models';
 import {
   HTTP_INTERNAL_SERVER_ERROR,
@@ -22,7 +22,7 @@ import {
   HTTP_SUCCESS,
 } from '@/lib/constants/http';
 import { AddSupplierRequestDto } from '@/lib/models/token';
-import { getConnection, getUmi } from '@/lib/utils/token';
+import { getConnection, /* getUmi */ } from '@/lib/utils/token';
 import dotenv from 'dotenv';
 import bs58 from 'bs58';
 
@@ -57,16 +57,16 @@ export default async function handler(
   }
   try {
     const connection = getConnection();
-    const umi = getUmi();
+    /* const umi = getUmi(); */
 
     const swapForgeAuthority = Keypair.fromSecretKey(
       bs58.decode(process.env.NEXT_PUBLIC_SWAPFORGE_WALLET_SECRET || '')
     );
 
-    const swapForgeSigner = createSignerFromKeypair(umi, {
+    /* const swapForgeSigner = createSignerFromKeypair(umi, {
       publicKey: publicKey(swapForgeAuthority.publicKey.toBase58()),
       secretKey: swapForgeAuthority.secretKey,
-    });
+    }); */
 
     const tokenAccount = await createAccount(
       connection,

@@ -23,7 +23,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
   const wallets = useMemo(
     () => [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
-    [network]
+    []
   );
 
   return (
