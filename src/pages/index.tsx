@@ -1,4 +1,5 @@
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 
 const Header = dynamic(() => import('@/layout/header'), {});
 const Footer = dynamic(() => import('@/layout/footer'), {});
@@ -8,47 +9,47 @@ export default function Home() {
     <div className='min-h-screen bg-gray-900 text-white'>
       <Header isLanding={true} />
 
-      <section id='features' className='py-20 px-4'>
-        <h2 className='text-3xl font-bold text-center mb-12'>Features</h2>
-        <div className='max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8'>
+      <section id='features' className='px-4 py-20'>
+        <h2 className='mb-12 text-center text-3xl font-bold'>Features</h2>
+        <div className='mx-auto grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-3'>
           {/* Feature 1 */}
-          <div className='bg-gray-800 p-6 rounded-lg shadow-lg h-52 flex flex-col justify-between'>
-            <h3 className='text-2xl font-semibold mb-4'>Token Creation</h3>
+          <div className='flex h-52 flex-col justify-between rounded-lg bg-gray-800 p-6 shadow-lg'>
+            <h3 className='mb-4 text-2xl font-semibold'>Token Creation</h3>
             <p className='text-gray-300'>
               Easily create tokens with customizable metadata and parameters
               with small fee.
             </p>
-            <a
+            <Link
               href='/create-token'
-              className='bg-yellow-400 text-gray-900 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-500 transition duration-300 w-auto text-center'
+              className='w-auto rounded-lg bg-yellow-400 px-6 py-3 text-center font-semibold text-gray-900 transition duration-300 hover:bg-yellow-500'
             >
               Create Token
-            </a>
+            </Link>
           </div>
 
           {/* Feature 2 */}
-          <div className='bg-gray-800 p-6 rounded-lg shadow-lg h-52 flex flex-col justify-between'>
-            <h3 className='text-2xl font-semibold mb-4'>Liquidity Pools</h3>
+          <div className='flex h-52 flex-col justify-between rounded-lg bg-gray-800 p-6 shadow-lg'>
+            <h3 className='mb-4 text-2xl font-semibold'>Liquidity Pools</h3>
             <p className='text-gray-300'>
               Create and manage liquidity pools for seamless token trading.
             </p>
             <a
               href='#'
-              className='bg-yellow-400 text-gray-900 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-500 transition duration-300 w-auto text-center'
+              className='w-auto rounded-lg bg-yellow-400 px-6 py-3 text-center font-semibold text-gray-900 transition duration-300 hover:bg-yellow-500'
             >
               Comming soon
             </a>
           </div>
 
           {/* Feature 3 */}
-          <div className='bg-gray-800 p-6 rounded-lg shadow-lg h-52 flex flex-col justify-between'>
-            <h3 className='text-2xl font-semibold mb-4'>Token Swapping</h3>
+          <div className='flex h-52 flex-col justify-between rounded-lg bg-gray-800 p-6 shadow-lg'>
+            <h3 className='mb-4 text-2xl font-semibold'>Token Swapping</h3>
             <p className='text-gray-300'>
               Swap tokens instantly with low fees and high-speed transactions.
             </p>
             <a
               href='#'
-              className='bg-yellow-400 text-gray-900 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-500 transition duration-300 w-auto text-center'
+              className='w-auto rounded-lg bg-yellow-400 px-6 py-3 text-center font-semibold text-gray-900 transition duration-300 hover:bg-yellow-500'
             >
               Comming soon
             </a>
@@ -56,13 +57,13 @@ export default function Home() {
         </div>
       </section>
 
-      <section className='py-20 px-4'>
-        <h2 className='text-3xl font-bold text-center mb-12'>
+      <section className='px-4 py-20'>
+        <h2 className='mb-12 text-center text-3xl font-bold'>
           Why Choose SwapForge?
         </h2>
-        <div className='max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8'>
-          <div className='bg-gray-800 p-6 rounded-lg shadow-lg h-58 flex flex-col justify-start'>
-            <h3 className='text-xl font-semibold mb-4'>
+        <div className='mx-auto grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-3'>
+          <div className='h-58 flex flex-col justify-start rounded-lg bg-gray-800 p-6 shadow-lg'>
+            <h3 className='mb-4 text-xl font-semibold'>
               1. User-Friendly Interface
             </h3>
             <p className='text-gray-300'>
@@ -72,8 +73,8 @@ export default function Home() {
             </p>
           </div>
 
-          <div className='bg-gray-800 p-6 rounded-lg shadow-lg h-58 flex flex-col justify-start'>
-            <h3 className='text-xl font-semibold mb-4'>2. Built on Solana</h3>
+          <div className='h-58 flex flex-col justify-start rounded-lg bg-gray-800 p-6 shadow-lg'>
+            <h3 className='mb-4 text-xl font-semibold'>2. Built on Solana</h3>
             <p className='text-gray-300'>
               SwapForge leverages the Solana blockchain, known for its
               high-speed transactions and low fees. Enjoy fast and
@@ -81,8 +82,8 @@ export default function Home() {
             </p>
           </div>
 
-          <div className='bg-gray-800 p-6 rounded-lg shadow-lg h-58 flex flex-col justify-start'>
-            <h3 className='text-xl font-semibold mb-4'>
+          <div className='h-58 flex flex-col justify-start rounded-lg bg-gray-800 p-6 shadow-lg'>
+            <h3 className='mb-4 text-xl font-semibold'>
               3. Comprehensive Token Creation
             </h3>
             <p className='text-gray-300'>
@@ -92,8 +93,8 @@ export default function Home() {
             </p>
           </div>
 
-          <div className='bg-gray-800 p-6 rounded-lg shadow-lg h-58 flex flex-col justify-start'>
-            <h3 className='text-xl font-semibold mb-4'>4. Advanced Metadata</h3>
+          <div className='h-58 flex flex-col justify-start rounded-lg bg-gray-800 p-6 shadow-lg'>
+            <h3 className='mb-4 text-xl font-semibold'>4. Advanced Metadata</h3>
             <p className='text-gray-300'>
               Store metadata on decentralized storage solutions like IPFS or
               Arweave for immutability and security. Easily update or revoke
@@ -101,8 +102,8 @@ export default function Home() {
             </p>
           </div>
 
-          <div className='bg-gray-800 p-6 rounded-lg shadow-lg h-58 flex flex-col justify-start'>
-            <h3 className='text-xl font-semibold mb-4'>
+          <div className='h-58 flex flex-col justify-start rounded-lg bg-gray-800 p-6 shadow-lg'>
+            <h3 className='mb-4 text-xl font-semibold'>
               5. Secure and Trustworthy
             </h3>
             <p className='text-gray-300'>
@@ -112,8 +113,8 @@ export default function Home() {
             </p>
           </div>
 
-          <div className='bg-gray-800 p-6 rounded-lg shadow-lg h-58 flex flex-col justify-start'>
-            <h3 className='text-xl font-semibold mb-4'>6. Cost-Effective</h3>
+          <div className='h-58 flex flex-col justify-start rounded-lg bg-gray-800 p-6 shadow-lg'>
+            <h3 className='mb-4 text-xl font-semibold'>6. Cost-Effective</h3>
             <p className='text-gray-300'>
               With Solana’s low transaction fees, creating and managing tokens
               on SwapForge is affordable for everyone. No hidden costs or
@@ -121,8 +122,8 @@ export default function Home() {
             </p>
           </div>
 
-          <div className='bg-gray-800 p-6 rounded-lg shadow-lg h-58 flex flex-col justify-start'>
-            <h3 className='text-xl font-semibold mb-4'>7. Future-Proof</h3>
+          <div className='h-58 flex flex-col justify-start rounded-lg bg-gray-800 p-6 shadow-lg'>
+            <h3 className='mb-4 text-xl font-semibold'>7. Future-Proof</h3>
             <p className='text-gray-300'>
               SwapForge is continuously evolving, with plans to add features
               like decentralized governance, staking, and NFT support. Stay
@@ -131,8 +132,8 @@ export default function Home() {
             </p>
           </div>
 
-          <div className='bg-gray-800 p-6 rounded-lg shadow-lg h-58 flex flex-col justify-start'>
-            <h3 className='text-xl font-semibold mb-4'>
+          <div className='h-58 flex flex-col justify-start rounded-lg bg-gray-800 p-6 shadow-lg'>
+            <h3 className='mb-4 text-xl font-semibold'>
               8. Liquidity and Swapping
             </h3>
             <p className='text-gray-300'>
@@ -142,8 +143,8 @@ export default function Home() {
             </p>
           </div>
 
-          <div className='bg-gray-800 p-6 rounded-lg shadow-lg h-58 flex flex-col justify-start'>
-            <h3 className='text-xl font-semibold mb-4'>
+          <div className='h-58 flex flex-col justify-start rounded-lg bg-gray-800 p-6 shadow-lg'>
+            <h3 className='mb-4 text-xl font-semibold'>
               9. Cross-Chain Compatibility
             </h3>
             <p className='text-gray-300'>
@@ -154,10 +155,10 @@ export default function Home() {
         </div>
       </section>
 
-      <section className='py-20 px-4 bg-gray-800'>
-        <div className='max-w-6xl mx-auto text-center'>
-          <h2 className='text-3xl font-bold mb-8'>Our Mission & Vision</h2>
-          <p className='text-gray-300 mb-6'>
+      <section className='bg-gray-800 px-4 py-20'>
+        <div className='mx-auto max-w-6xl text-center'>
+          <h2 className='mb-8 text-3xl font-bold'>Our Mission & Vision</h2>
+          <p className='mb-6 text-gray-300'>
             <span className='font-semibold text-yellow-400'>Mission:</span>{' '}
             Empower creators, developers, and traders to seamlessly create,
             manage, and trade tokens on the Solana blockchain.
@@ -171,33 +172,33 @@ export default function Home() {
         </div>
       </section>
 
-      <section className='py-20 px-4 bg-gradient-to-r from-purple-800 to-indigo-900'>
-        <div className='max-w-4xl mx-auto text-center'>
-          <h2 className='text-3xl font-bold mb-8'>Ready to Get Started?</h2>
-          <p className='text-xl mb-8'>
+      <section className='bg-gradient-to-r from-purple-800 to-indigo-900 px-4 py-20'>
+        <div className='mx-auto max-w-4xl text-center'>
+          <h2 className='mb-8 text-3xl font-bold'>Ready to Get Started?</h2>
+          <p className='mb-8 text-xl'>
             Join SwapForge today and unlock the full potential of token creation
             and liquidity management.
           </p>
-          <a
+          <Link
             href='/create-token'
-            className='bg-yellow-400 text-gray-900 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-500 transition duration-300'
+            className='rounded-lg bg-yellow-400 px-6 py-3 font-semibold text-gray-900 transition duration-300 hover:bg-yellow-500'
           >
             Launch SwapForge
-          </a>
+          </Link>
         </div>
       </section>
 
-      <section className='py-20 px-4 bg-gradient-to-r from-purple-800 to-indigo-900'>
-        <div className='max-w-4xl mx-auto text-center'>
-          <h2 className='text-3xl font-bold mb-8'>Community and Ecosystem?</h2>
-          <p className='text-xl mb-8'>
+      <section className='bg-gradient-to-r from-purple-800 to-indigo-900 px-4 py-20'>
+        <div className='mx-auto max-w-4xl text-center'>
+          <h2 className='mb-8 text-3xl font-bold'>Community and Ecosystem?</h2>
+          <p className='mb-8 text-xl'>
             Join a growing community of developers, creators, and traders on
             SwapForge. Access resources, tutorials, and support to help you
             succeed.
           </p>
           <a
             href='#'
-            className='bg-yellow-400 text-gray-900 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-500 transition duration-300'
+            className='rounded-lg bg-yellow-400 px-6 py-3 font-semibold text-gray-900 transition duration-300 hover:bg-yellow-500'
           >
             Join Now
           </a>

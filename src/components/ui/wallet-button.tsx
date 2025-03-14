@@ -43,25 +43,14 @@ const WalletButton = () => {
     <Menubar className='w-full text-gray-900'>
       <MenubarMenu>
         <MenubarTrigger className='text-gray-900'>
-          <span className='text-gray-900 cursor-pointer'>
+          <span className='cursor-pointer text-gray-900'>
             {`Connected: ${publicKey?.toBase58().slice(0, 6)}...`}
           </span>
         </MenubarTrigger>
-        <MenubarContent className=' text-gray-900 cursor-pointer'>
-          {/* <MenubarItem
-            onClick={async (e) => {
-              e.preventDefault();
-              await handleDesconnect();
-              handleOpenModal();
-            }}
-            className='text-gray-900  cursor-pointer'
-          >
-            Change
-          </MenubarItem>
-          <MenubarSeparator /> */}
+        <MenubarContent className='cursor-pointer text-gray-900'>
           <MenubarItem
             onClick={handleDesconnect}
-            className='text-gray-900  cursor-pointer'
+            className='cursor-pointer text-gray-900'
           >
             Disconnect
           </MenubarItem>
@@ -72,7 +61,7 @@ const WalletButton = () => {
     <>
       <Button
         onClick={handleOpenModal}
-        className='bg-yellow-400 text-gray-900 px-4 py-2 rounded-lg hover:bg-yellow-500 transition duration-300 cursor-pointer'
+        className='cursor-pointer rounded-lg bg-yellow-400 px-4 py-2 text-gray-900 transition duration-300 hover:bg-yellow-500'
       >
         Connect Wallet
       </Button>
@@ -81,7 +70,7 @@ const WalletButton = () => {
           <DialogHeader>
             <DialogTitle>Connect Wallet</DialogTitle>
             <DialogDescription />
-            <div className='flex flex-row gap-6 justify-center mt-4'>
+            <div className='mt-4 flex flex-row justify-center gap-6'>
               {wallets.map((wallet, index) => (
                 <div
                   key={index}

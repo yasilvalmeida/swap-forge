@@ -1,23 +1,29 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import logo from '../../../public/swap-forge.png';
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+} from '@/components/ui/navigation-menu';
 import { useRouter } from 'next/router';
 
 export default function Navbar() {
   const router = useRouter();
-  
+
   return (
     <nav className='bg-gray-800 p-4'>
-      <div className='container mx-auto flex justify-between items-center'>
+      <div className='container mx-auto flex flex-col items-center justify-center md:flex-row'>
         <div className='flex items-center space-x-8'>
           <Link
             href='/'
-            className='text-white text-2xl font-bold flex flex-row items-center gap-2'
+            className='flex flex-row items-center gap-2 text-2xl font-bold text-white'
           >
             <Image alt='swap-forge-logo' src={logo} width={120} height={120} />
             SwapForge
           </Link>
-          <div className='hidden md:flex space-x-6'>
+          <div className='hidden space-x-6 md:flex'>
             <Link
               href='/create-token'
               className={` hover:text-white ${
