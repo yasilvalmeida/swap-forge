@@ -1,26 +1,31 @@
-import { MongoClient } from 'mongodb';
+import { Db, MongoClient } from 'mongodb';
+import dotenv from 'dotenv';
 
-const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+dotenv.config();
+
+const uri = process.env.MONGODB_URI || '';
 const options = {};
 
 let client;
-let clientPromise: Promise<MongoClient>;
+let database: Db;
 
 if (!process.env.MONGODB_URI) {
   throw new Error('Please add your MongoDB URI to .env.local');
 }
 
 if (process.env.NODE_ENV === 'development') {
-  // Use a global variable to preserve the MongoClient instance in development mode
-  if (!global._mongoClientPromise) {
+  if (!global._) {
     client = new MongoClient(uri, options);
-    global._mongoClientPromise = client.connect();
+    client = await client.connect();
   }
-  clientPromise = global._mongoClientPromise;
 } else {
   // In production, create a new MongoClient instance
   client = new MongoClient(uri, options);
-  clientPromise = client.connect();
+  client = await client.connect();
 }
 
-export default clientPromise;
+if (client) {
+  database = client.db('swapforge');
+}
+
+export { database };

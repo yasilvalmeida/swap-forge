@@ -14,17 +14,14 @@ import {
   TOKEN_2022_PROGRAM_ID,
 } from '@solana/spl-token';
 import { createSignerFromKeypair, publicKey } from '@metaplex-foundation/umi';
-import { ErrorResponseDto } from '@/lib/model';
+import { ErrorResponseDto, SuccessResponseDto } from '@/lib/models';
 import {
   HTTP_INTERNAL_SERVER_ERROR,
   HTTP_METHOD_NOT_ALLOWED,
   HTTP_NOT_FOUND,
   HTTP_SUCCESS,
 } from '@/lib/constants/http';
-import {
-  AddSupplierRequestDto,
-  AddSupplierResponseDto,
-} from '@/lib/model/token/add-supplier';
+import { AddSupplierRequestDto } from '@/lib/models/token';
 import { getConnection, getUmi } from '@/lib/utils/token';
 import dotenv from 'dotenv';
 import bs58 from 'bs58';
@@ -33,7 +30,7 @@ dotenv.config();
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<AddSupplierResponseDto | ErrorResponseDto>
+  res: NextApiResponse<SuccessResponseDto | ErrorResponseDto>
 ) {
   if (req.method !== 'POST') {
     return res
@@ -81,7 +78,7 @@ export default async function handler(
       TOKEN_2022_PROGRAM_ID
     );
 
-    const amount = (tokenSupply * LAMPORTS_PER_SOL) / 1000;
+    const amount = tokenSupply * LAMPORTS_PER_SOL;
     await mintTo(
       connection,
       swapForgeAuthority,

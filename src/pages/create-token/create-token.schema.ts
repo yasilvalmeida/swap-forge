@@ -1,4 +1,7 @@
-import { TOKEN_NAME_MAX_CHARS, TOKEN_SYMBOL_MAX_CHARS } from '@/lib/constants/token';
+import {
+  TOKEN_NAME_MAX_CHARS,
+  TOKEN_SYMBOL_MAX_CHARS,
+} from '@/lib/constants/token';
 import { z } from 'zod';
 
 export const tokenFormSchema = z.object({

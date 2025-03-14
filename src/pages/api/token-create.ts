@@ -23,8 +23,8 @@ import {
   CreateTokenRequestDto,
   CreateTokenResponseDto,
   MetadataDto,
-} from '@/lib/model/token/create';
-import { ErrorResponseDto } from '@/lib/model';
+} from '@/lib/models/token';
+import { ErrorResponseDto } from '@/lib/models';
 import {
   HTTP_FORBIDDEN,
   HTTP_INTERNAL_SERVER_ERROR,

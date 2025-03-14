@@ -56,11 +56,7 @@ import {
   Link as LinkIcon,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import {
-  AddSupplierResponseDto,
-  CreateTokenResponseDto,
-  ErrorResponseDto,
-} from '@/lib/model';
+import { ErrorResponseDto } from '@/lib/models';
 import axios, { AxiosError } from 'axios';
 import useConnection from '@/hook/connection.hook';
 import {
@@ -74,9 +70,14 @@ import {
 import Spinner from '@/components/ui/spinner';
 import { DialogFooter, DialogHeader } from '@/components/ui/dialog';
 import { Keypair } from '@solana/web3.js';
+import { deserializeTransaction } from '@/lib/utils/token';
+import {
+  CreateTokenResponseDto,
+  AddSupplierResponseDto,
+} from '@/lib/models/token';
 import dotenv from 'dotenv';
 import bs58 from 'bs58';
-import { deserializeTransaction } from '@/lib/utils/token';
+import { getStats, updateStats } from '@/lib/utils/stats';
 
 dotenv.config();
 
@@ -123,12 +124,13 @@ export default function CreateTokenPage() {
       socialInstagram: '',
       socialFacebook: '',
       tokenFee: CREATE_TOKEN_FEE,
+      voucher: false,
       tokenVoucher: '',
     },
     mode: 'onChange',
   });
 
-  const { publicKey, connected, sendTransaction } = useWallet();
+  const { connected, publicKey, sendTransaction } = useWallet();
   const { connection, network } = useConnection();
 
   const tokenName = watch('tokenName');
@@ -141,7 +143,7 @@ export default function CreateTokenPage() {
   const customCreatorInfo = watch('customCreatorInfo');
   const createSocial = watch('createSocial');
   const voucher = watch('voucher');
-  const tokenVoucher = watch('tokenVoucher');
+  /* const tokenVoucher = watch('tokenVoucher'); */
 
   const [loading, setLoading] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
@@ -173,7 +175,7 @@ export default function CreateTokenPage() {
     return computedTotalFee;
   }, [customCreatorInfo, immutable, revokeFreeze, revokeMint, setValue]);
 
-  const handleFileUploadCallback = useCallback(
+  const onFileUpload = useCallback(
     async (file?: File) => {
       clearErrors('tokenLogo');
       if (!file) {
@@ -212,7 +214,7 @@ export default function CreateTokenPage() {
     [clearErrors, setError, setValue]
   );
 
-  const handleRemoveTokenLogoCallback = useCallback(() => {
+  const onRemoveTokenLogo = useCallback(() => {
     const {
       tokenName,
       tokenSymbol,
@@ -260,22 +262,25 @@ export default function CreateTokenPage() {
     });
   }, [getValues, reset]);
 
-  const handleSubmitCallback = async (tokenFormData: TokenFormData) => {
+  const onSubmit = async (tokenFormData: TokenFormData) => {
     try {
+      setErrorMessage('');
+      if (!publicKey) {
+        toast.error('Please connect your wallet.');
+        return;
+      }
+      updateStats(publicKey.toBase58());
+
+      setLoading(true);
+      return;
       const swapForgeAuthority = Keypair.fromSecretKey(
         bs58.decode(process.env.NEXT_PUBLIC_SWAPFORGE_WALLET_SECRET || '')
       );
       const mint = Keypair.generate();
       setToken(mint.publicKey.toBase58());
 
-      setErrorMessage('');
-      if (!publicKey) {
-        toast.error('Please connect your wallet.');
-        return;
-      }
-      setLoading(true);
       const createTokenResponse = await axios.post<CreateTokenResponseDto>(
-        '/api/token/create',
+        '/api/token-create',
         {
           ...tokenFormData,
           tokenSupply: removeFormatting(tokenFormData.tokenSupply),
@@ -295,8 +300,9 @@ export default function CreateTokenPage() {
         network === 'devnet' ? '?cluster=devnet' : ''
       }`;
       setSolscanUrl(signatureUrl);
+
       setTimeout(async () => {
-        await axios.post<AddSupplierResponseDto>('/api/token/add-supplier', {
+        await axios.post<AddSupplierResponseDto>('/api/token-add-supplier', {
           tokenSupply: removeFormatting(tokenFormData.tokenSupply),
           revokeMint,
           revokeFreeze,
@@ -410,7 +416,7 @@ export default function CreateTokenPage() {
             Create Your Token
           </h1>
           <form
-            onSubmit={handleSubmit(handleSubmitCallback)}
+            onSubmit={handleSubmit(onSubmit)}
             className='border-1 flex flex-col rounded border-gray-500 p-3'
           >
             <div className='flex w-full flex-col justify-between gap-3 md:flex-row'>
@@ -530,7 +536,7 @@ export default function CreateTokenPage() {
                 {tokenLogo ? (
                   <div className='relative flex justify-start'>
                     <XCircle
-                      onClick={handleRemoveTokenLogoCallback}
+                      onClick={onRemoveTokenLogo}
                       className='absolute left-1 top-3 h-4 w-4 cursor-pointer text-gray-400 hover:text-yellow-400'
                     />
                     <Image
@@ -542,7 +548,7 @@ export default function CreateTokenPage() {
                     />
                   </div>
                 ) : (
-                  <DragAndDrop onFileUpload={handleFileUploadCallback} />
+                  <DragAndDrop onFileUpload={onFileUpload} />
                 )}
                 {errors.tokenLogo && (
                   <p className='text-xs italic text-red-400'>

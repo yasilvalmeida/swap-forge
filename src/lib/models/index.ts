@@ -6,3 +6,7 @@ export type DimensionDto = {
 export type ErrorResponseDto = {
   error: string;
 };
+
+export type SuccessResponseDto = {
+  message: string;
+};
