@@ -82,8 +82,11 @@ export default async function handler(
   }
   try {
     const connection = getConnection();
+
     console.log(' Authority Address: ', swapForge.toBase58());
-    const swapForgeBalance = await connection.getBalance(swapForge);
+    const swapForgeBalance = await connection.getBalance(
+      swapForge
+    );
     console.log(
       ` Authority balance: ${swapForgeBalance / LAMPORTS_PER_SOL} SOL`
     );

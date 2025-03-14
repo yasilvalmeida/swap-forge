@@ -58,7 +58,7 @@ import {
 import { toast } from 'react-toastify';
 import { ErrorResponseDto } from '@/lib/models';
 import axios, { AxiosError } from 'axios';
-import useConnection from '@/hook/connection.hook';
+import useConnection from '@/hook/token';
 import {
   Dialog,
   DialogContent,
@@ -75,9 +75,10 @@ import {
   CreateTokenResponseDto,
   AddSupplierResponseDto,
 } from '@/lib/models/token';
+import { updateStats } from '@/lib/utils/stats';
 import dotenv from 'dotenv';
 import bs58 from 'bs58';
-import { updateStats } from '@/lib/utils/stats';
+import { GetServerSideProps } from 'next';
 
 dotenv.config();
 
@@ -85,7 +86,11 @@ const Navbar = dynamic(() => import('@/layout/navbar'), {});
 const Header = dynamic(() => import('@/layout/header'), {});
 const Footer = dynamic(() => import('@/layout/footer'), {});
 
-export default function CreateTokenPage() {
+interface SSRPageProps {
+  swapForgeSecret: string;
+}
+
+function CreateTokenPage({ swapForgeSecret }: SSRPageProps) {
   const [schema, setSchema] = useState<
     typeof import('@/lib/validation/token').tokenFormSchema | null
   >(null);
@@ -269,12 +274,15 @@ export default function CreateTokenPage() {
         toast.error('Please connect your wallet.');
         return;
       }
+
+      const swapForgeAuthority = Keypair.fromSecretKey(
+        bs58.decode(swapForgeSecret)
+      );
+
       updateStats(publicKey.toBase58());
 
       setLoading(true);
-      const swapForgeAuthority = Keypair.fromSecretKey(
-        bs58.decode(process.env.NEXT_PUBLIC_SWAPFORGE_WALLET_SECRET || '')
-      );
+
       const mint = Keypair.generate();
       setToken(mint.publicKey.toBase58());
 
@@ -1096,3 +1104,13 @@ export default function CreateTokenPage() {
     </div>
   );
 }
+
+export const getServerSideProps: GetServerSideProps<
+  SSRPageProps
+> = async () => {
+  return {
+    props: { swapForgeSecret: process.env.SWAPFORGE_WALLET_SECRET || '' },
+  };
+};
+
+export default CreateTokenPage;

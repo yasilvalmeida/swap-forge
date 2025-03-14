@@ -22,7 +22,7 @@ import {
   HTTP_SUCCESS,
 } from '@/lib/constants/http';
 import { AddSupplierRequestDto } from '@/lib/models/token';
-import { getConnection, /* getUmi */ } from '@/lib/utils/token';
+import { getConnection /* getUmi */ } from '@/lib/utils/token';
 import dotenv from 'dotenv';
 import bs58 from 'bs58';
 
@@ -60,7 +60,7 @@ export default async function handler(
     /* const umi = getUmi(); */
 
     const swapForgeAuthority = Keypair.fromSecretKey(
-      bs58.decode(process.env.NEXT_PUBLIC_SWAPFORGE_WALLET_SECRET || '')
+      bs58.decode(process.env.SWAPFORGE_WALLET_SECRET || '')
     );
 
     /* const swapForgeSigner = createSignerFromKeypair(umi, {
