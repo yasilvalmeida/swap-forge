@@ -272,7 +272,6 @@ export default function CreateTokenPage() {
       updateStats(publicKey.toBase58());
 
       setLoading(true);
-      return;
       const swapForgeAuthority = Keypair.fromSecretKey(
         bs58.decode(process.env.NEXT_PUBLIC_SWAPFORGE_WALLET_SECRET || '')
       );
