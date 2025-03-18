@@ -6,7 +6,7 @@ orbs:
 jobs:
   build-and-test:
     docker:
-      - image: cimg/node:18.17
+      - image: cimg/node:20.18
     steps:
       - checkout
       - node/install-packages:
@@ -24,7 +24,7 @@ jobs:
 
   deploy-production:
     docker:
-      - image: cimg/node:18.17
+      - image: cimg/node:20.18
     steps:
       - attach_workspace:
           at: .
