@@ -32,6 +32,9 @@ jobs:
           fingerprints:
             - $SSH_FINGERPRINT
       - run:
+          name: Create .ssh directory
+          command: mkdir -p ~/.ssh && chmod 700 ~/.ssh
+      - run:
           name: Add to known hosts
           command: ssh-keyscan -H $VPS_IP >> ~/.ssh/known_hosts
       - run:
