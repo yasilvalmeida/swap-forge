@@ -45,7 +45,7 @@ jobs:
           command: sudo npm i -g pm2
       - run:
           name: Deploy to VPS Namecheap
-          command: pm2 deploy ecosystem.config.js production
+          command: pm2 deploy --force production
 
 workflows:
   build:
