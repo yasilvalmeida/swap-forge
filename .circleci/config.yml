@@ -11,28 +11,30 @@ jobs:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
+          cache-path: ~/.cache/yarn
       - setup_remote_docker:
           version: 20.10.14
       - run:
-          name: install dependencies
-          command: yarn
-      - run:
           name: Run build
           command: yarn build
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build
+            - node_modules
 
   deploy-production:
     docker:
       - image: cimg/node:18.17
     steps:
-      - checkout
-      - node/install-packages:
-          pkg-manager: yarn
+      - attach_workspace:
+          at: .
       - add_ssh_keys:
           fingerprints:
-            - 'df:1f:c4:a0:3d:c2:7c:fc:3b:80:e9:6f:4e:c1:e3:57'
+            - $SSH_FINGERPRINT
       - run:
           name: Add to known hosts
-          command: ssh-keyscan -H 203.161.38.145 >> ~/.ssh/known_hosts
+          command: ssh-keyscan -H $VPS_IP >> ~/.ssh/known_hosts
       - run:
           name: Install pm2
           command: sudo npm i -g pm2
