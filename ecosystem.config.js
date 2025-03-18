@@ -1,4 +1,5 @@
 const name = 'swapforge-' + process.env.APP_ENV;
+
 module.exports = {
   apps: [
     {
@@ -25,7 +26,7 @@ module.exports = {
       'pre-deploy-local': '',
       'post-deploy':
         'export APP_ENV=production && yarn && yarn build && pm2 reload ecosystem.config.js --env production && pm2 save',
-      'pre-setup': '',
+      'pre-setup': 'npm install -g pm2',
       ssh_options: 'ForwardAgent=yes',
     },
   },

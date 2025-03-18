@@ -21,6 +21,7 @@ jobs:
           paths:
             - build
             - node_modules
+            - ecosystem.config.js 
 
   deploy-production:
     docker:
@@ -28,6 +29,9 @@ jobs:
     steps:
       - attach_workspace:
           at: .
+      - run:
+          name: List workspace files
+          command: ls -la
       - add_ssh_keys:
           fingerprints:
             - $SSH_FINGERPRINT
@@ -42,7 +46,7 @@ jobs:
           command: sudo npm i -g pm2
       - run:
           name: Deploy to VPS Namecheap
-          command: pm2 deploy production
+          command: pm2 deploy ecosystem.config.js production
 
 workflows:
   build:
