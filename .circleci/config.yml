@@ -1,26 +1,35 @@
 version: 2.1
 
 orbs:
-  node: circleci/node@4.7
+  node: circleci/node@5.2.0
 
 jobs:
-  build:
+  build-and-test:
     docker:
-      - image: cimg/node:22.14
+      - image: cimg/node:18.17
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
-  deploy-to-production:
+      - setup_remote_docker:
+          version: 22.14.0
+      - run:
+          name: install dependencies
+          command: yarn
+      - run:
+          name: Run build
+          command: yarn build
+
+  deploy-production:
     docker:
-      - image: cimg/node:22.14
+      - image: cimg/node:18.17
     steps:
       - checkout
-      - node/install-packages: 
+      - node/install-packages:
           pkg-manager: yarn
       - add_ssh_keys:
           fingerprints:
-            - "df:1f:c4:a0:3d:c2:7c:fc:3b:80:e9:6f:4e:c1:e3:57"
+            - 'df:1f:c4:a0:3d:c2:7c:fc:3b:80:e9:6f:4e:c1:e3:57'
       - run:
           name: Add to known hosts
           command: ssh-keyscan -H 203.161.38.145 >> ~/.ssh/known_hosts
@@ -34,19 +43,20 @@ jobs:
 workflows:
   build:
     jobs:
-      - build:
+      - build-and-test:
           filters:
             branches:
               ignore:
                 - main
+
   production:
     jobs:
       - build-and-test:
           filters: &filters-production
             branches:
               only: main
-      - deploy-to-production:
+      - deploy-production:
           filters:
             <<: *filters-production
           requires:
-            - "build"
+            - 'build-and-test'
