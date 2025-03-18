@@ -20,7 +20,7 @@ module.exports = {
       user: 'root',
       host: '203.161.38.145',
       ref: 'origin/main',
-      repo: 'git@github.com:yasilvalmeida/swap-forge-uploader.git',
+      repo: 'git@github.com:yasilvalmeida/swap-forge.git',
       fetch: 'all',
       path: '/home/webapp/swapforge',
       'pre-deploy-local': '',
