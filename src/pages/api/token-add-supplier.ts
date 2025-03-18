@@ -12,8 +12,8 @@ import {
   createSetAuthorityInstruction,
   mintTo,
   TOKEN_2022_PROGRAM_ID,
+  createUpdateAuthorityInstruction,
 } from '@solana/spl-token';
-/* import { createSignerFromKeypair, publicKey } from '@metaplex-foundation/umi'; */
 import { ErrorResponseDto, SuccessResponseDto } from '@/lib/models';
 import {
   HTTP_INTERNAL_SERVER_ERROR,
@@ -22,9 +22,11 @@ import {
   HTTP_SUCCESS,
 } from '@/lib/constants/http';
 import { AddSupplierRequestDto } from '@/lib/models/token';
-import { getConnection /* getUmi */ } from '@/lib/utils/token';
+import { getConnection } from '@/lib/utils/token';
 import dotenv from 'dotenv';
 import bs58 from 'bs58';
+import { MAX_TIMEOUT_TOKEN_MINT } from '@/lib/constants/token';
+import { sleep } from '@/lib/utils';
 
 dotenv.config();
 
@@ -57,16 +59,10 @@ export default async function handler(
   }
   try {
     const connection = getConnection();
-    /* const umi = getUmi(); */
 
     const swapForgeAuthority = Keypair.fromSecretKey(
       bs58.decode(process.env.SWAPFORGE_WALLET_SECRET || '')
     );
-
-    /* const swapForgeSigner = createSignerFromKeypair(umi, {
-      publicKey: publicKey(swapForgeAuthority.publicKey.toBase58()),
-      secretKey: swapForgeAuthority.secretKey,
-    }); */
 
     const tokenAccount = await createAccount(
       connection,
@@ -78,7 +74,9 @@ export default async function handler(
       TOKEN_2022_PROGRAM_ID
     );
 
-    const amount = tokenSupply * LAMPORTS_PER_SOL;
+    const amount = (tokenSupply * LAMPORTS_PER_SOL) / 1000;
+    await sleep(MAX_TIMEOUT_TOKEN_MINT)
+
     await mintTo(
       connection,
       swapForgeAuthority,
@@ -92,6 +90,19 @@ export default async function handler(
     );
 
     const transaction = new Transaction();
+
+    if (immutable) {
+      const revokeUpdateAuthorityInstruction = createUpdateAuthorityInstruction(
+        {
+          programId: TOKEN_2022_PROGRAM_ID,
+          metadata: mint,
+          oldAuthority: swapForgeAuthority.publicKey,
+          newAuthority: null,
+        }
+      );
+
+      transaction.add(revokeUpdateAuthorityInstruction);
+    }
 
     if (revokeFreeze) {
       const revokeFreezeAuthorityInstruction = createSetAuthorityInstruction(
@@ -119,13 +130,7 @@ export default async function handler(
       transaction.add(revokeMintAuthorityInstruction);
     }
 
-    if (immutable) {
-      /* await updateMetadataAccountV2(umi, {
-        metadata: publicKey(mint),
-        updateAuthority: swapForgeSigner,
-        isMutable: false,
-      }).sendAndConfirm(umi); */
-    }
+    
 
     const { blockhash } = await connection.getLatestBlockhash();
 

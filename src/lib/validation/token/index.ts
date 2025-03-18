@@ -37,8 +37,6 @@ export const tokenFormSchema = z.object({
   socialDiscord: z.string(),
   socialInstagram: z.string(),
   socialFacebook: z.string(),
-  voucher: z.boolean(),
-  tokenVoucher: z.string(),
   tokenFee: z.number(),
 });
 

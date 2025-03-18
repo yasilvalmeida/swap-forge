@@ -29,7 +29,7 @@ export function DragAndDrop({ onFileUpload }: DragAndDropProps) {
   return (
     <div
       {...getRootProps()}
-      className={`flex h-40 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-500 bg-gray-800 p-4 text-center ${
+      className={`flex h-40 w-40 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-500 bg-gray-800 p-4 text-center ${
         isDragActive ? 'border-yellow-400 bg-gray-700' : ''
       }`}
     >
@@ -43,9 +43,9 @@ export function DragAndDrop({ onFileUpload }: DragAndDropProps) {
         <>
           <ImageIcon className='mb-2 h-8 w-8 text-gray-400' />
           <p className='text-gray-400'>
-            Drag & drop an image here, or click to select
+            Drag & drop, or click to select
           </p>
-          <p className='mt-2 text-sm text-gray-500'>
+          <p className='text-xs mt-2 text-gray-500'>
             Only JPEG and PNG files are allowed
           </p>
           <Button type='button' variant='default' className='mt-4'>

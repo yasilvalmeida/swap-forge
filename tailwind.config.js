@@ -7,18 +7,9 @@ module.exports = {
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
-    /* extend: {
-      colors: {
-        primary: '#2d6987',
-        'primary-hover': '#02466e',
-        secundary: '#3e7870',
-        'secundary-hover': '#365e59',
-        warning: '#d97706',
-        'warning-hover': '#f59e0b',
-        danger: '#dc2626',
-        'danger-hover': '#ef4444',
-      },
-    }, */
+    extend: {
+      display: ['group-hover'],
+    },
     fontSize: {
       sm: '0.8rem',
       base: '1rem',

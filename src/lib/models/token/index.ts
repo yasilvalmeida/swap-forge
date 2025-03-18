@@ -22,13 +22,9 @@ export type CreateTokenRequestDto = {
   tokenName: string;
   tokenSymbol: string;
   tokenDecimals: number;
-  tokenSupply: number;
   tokenLogo: string;
   tokenDescription: string;
   tags: string[];
-  revokeMint: boolean;
-  revokeFreeze: boolean;
-  immutable: boolean;
   customCreatorInfo: boolean;
   creatorName: string;
   creatorWebsite: string;
@@ -61,4 +57,12 @@ export type AddSupplierRequestDto = {
 
 export type AddSupplierResponseDto = {
   message: string;
+};
+
+export type ResizeImageRequestDto = {
+  tokenLogoBase64: string;
+};
+
+export type ResizeImageResponseDto = {
+  resizedTokenLogoBase64: string;
 };

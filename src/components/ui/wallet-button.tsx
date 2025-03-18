@@ -4,6 +4,7 @@ import {
   MenubarContent,
   MenubarItem,
   MenubarMenu,
+  MenubarSeparator,
   MenubarTrigger,
 } from '@/components/ui/menubar';
 import {
@@ -13,59 +14,114 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'react-toastify';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import { WalletName } from '@solana/wallet-adapter-base';
+import useConnection from '@/hook/token';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 
-const WalletButton = () => {
-  const { disconnect, select, connected, publicKey, wallets } = useWallet();
+interface IProps {
+  network: string;
+}
 
-  const [open, setOpen] = useState<boolean>(false);
+const WalletButton = ({ network }: IProps) => {
+  const { disconnect, select, connected, publicKey, wallets, wallet } =
+    useWallet();
+  const { connection } = useConnection({ network });
+
+  const [openSelectWallet, setOpenSelectWallet] = useState<boolean>(false);
+  /* const [openGetReferalCode, setOpenGetReferalCode] = useState<boolean>(false); */
   const [selectedWallet, setSelectedWallet] = useState<Wallet>();
 
-  const handleDesconnect = useCallback(async () => {
+  const balance = useMemo(async () => {
+    if (publicKey) {
+      const walletBalance = await connection.getBalance(publicKey);
+      return walletBalance / LAMPORTS_PER_SOL;
+    }
+    return 0;
+  }, [connection, publicKey]);
+
+  const onDesconnect = useCallback(async () => {
     try {
       await disconnect();
-      setOpen(false);
+      setOpenSelectWallet(false);
       toast.success('Wallet disconnected successful');
     } catch (error) {
       toast.error(JSON.stringify(error));
     }
   }, [disconnect]);
 
-  const handleOpenModal = useCallback(() => {
-    setOpen(true);
+  const onOpenModal = useCallback(() => {
+    setOpenSelectWallet(true);
   }, []);
 
+  /* const onGetReferalCode = useCallback(() => {
+    setOpenGetReferalCode(true);
+  }, []); */
+
+  /* useEffect(() => {
+    if (!wallet?.adapter) return;
+
+    const handleError = (error: Error) => {
+      console.error('Wallet adapter error on useEffect:', error);
+    };
+
+    wallet.adapter.on('error', handleError);
+    return () => {
+      wallet.adapter.off('error', handleError);
+    };
+  }, [wallet]); */
+
   return connected ? (
-    <Menubar className='w-full text-gray-900'>
-      <MenubarMenu>
-        <MenubarTrigger className='text-gray-900'>
-          <span className='cursor-pointer text-gray-900'>
-            {`Connected: ${publicKey?.toBase58().slice(0, 6)}...`}
-          </span>
-        </MenubarTrigger>
-        <MenubarContent className='cursor-pointer text-gray-900'>
-          <MenubarItem
-            onClick={handleDesconnect}
-            className='cursor-pointer text-gray-900'
-          >
-            Disconnect
-          </MenubarItem>
-        </MenubarContent>
-      </MenubarMenu>
-    </Menubar>
+    <>
+      <Menubar className='w-full text-gray-900'>
+        <MenubarMenu>
+          <MenubarTrigger className='text-gray-900'>
+            <span className='cursor-pointer text-gray-900'>
+              {`Connected: ${publicKey?.toBase58().slice(0, 6)}...`}
+            </span>
+          </MenubarTrigger>
+          <MenubarContent className='cursor-pointer text-gray-900'>
+            <MenubarItem className='cursor-pointer text-gray-900'>
+              My balance {balance} SOL
+            </MenubarItem>
+            {/* <MenubarItem
+              onClick={onGetReferalCode}
+              className='cursor-pointer text-gray-900'
+            >
+              Get Referal Code
+            </MenubarItem> */}
+            <MenubarSeparator />
+            <MenubarItem
+              onClick={onDesconnect}
+              className='cursor-pointer text-gray-900'
+            >
+              Disconnect
+            </MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+      </Menubar>
+      {/* <Dialog open={openGetReferalCode} onOpenChange={setOpenGetReferalCode}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Referal Code</DialogTitle>
+            <DialogDescription />
+            <div className='mt-4 flex flex-row justify-center gap-6'></div>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog> */}
+    </>
   ) : (
     <>
       <Button
-        onClick={handleOpenModal}
+        onClick={onOpenModal}
         className='cursor-pointer rounded-lg bg-yellow-400 px-4 py-2 text-gray-900 transition duration-300 hover:bg-yellow-500'
       >
         Connect Wallet
       </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={openSelectWallet} onOpenChange={setOpenSelectWallet}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Connect Wallet</DialogTitle>

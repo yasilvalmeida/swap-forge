@@ -50,3 +50,7 @@ export const convertFileToBase64 = (file: File): Promise<string> => {
 export const copyToClipboard = (text: string) => {
   return navigator.clipboard.writeText(text);
 };
+
+export const sleep = (ms: number) => {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+};

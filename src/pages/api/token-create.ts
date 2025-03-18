@@ -33,6 +33,10 @@ import {
   HTTP_SUCCESS,
 } from '@/lib/constants/http';
 import { getConnection } from '@/lib/utils/token';
+import {
+  uploadMediaToCloudinary,
+  uploadRawToCloudinary,
+} from '@/lib/utils/cloudinary';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -53,7 +57,6 @@ export default async function handler(
     tokenName,
     tokenSymbol,
     tokenDecimals,
-    tokenSupply,
     tokenLogo,
     tokenDescription,
     tags,
@@ -83,22 +86,12 @@ export default async function handler(
   try {
     const connection = getConnection();
 
-    console.log(' Authority Address: ', swapForge.toBase58());
-    const swapForgeBalance = await connection.getBalance(
-      swapForge
-    );
-    console.log(
-      ` Authority balance: ${swapForgeBalance / LAMPORTS_PER_SOL} SOL`
-    );
-
-    console.log(' Wallet Address: ', wallet.toBase58());
-
     const walletBalance = await connection.getBalance(wallet);
-    console.log(` Wallet balance: ${walletBalance / LAMPORTS_PER_SOL} SOL`);
 
-    console.log(' Mint Address: ', mint.toBase58());
-
-    if (walletBalance / LAMPORTS_PER_SOL < tokenFee) {
+    if (
+      process.env.NODE_ENV === 'production' &&
+      walletBalance / LAMPORTS_PER_SOL < tokenFee
+    ) {
       return res
         .status(HTTP_FORBIDDEN)
         .json({ error: 'Insufficient balance!' });
@@ -107,14 +100,12 @@ export default async function handler(
     const transferFeesInstruction = SystemProgram.transfer({
       fromPubkey: wallet,
       toPubkey: swapForge,
-      lamports: LAMPORTS_PER_SOL * tokenFee,
+      lamports:
+        process.env.NODE_ENV === 'production' ? LAMPORTS_PER_SOL * tokenFee : 0,
     });
 
-    const totalSuppliers = tokenSupply * LAMPORTS_PER_SOL;
-    console.log('totalSuppliers', totalSuppliers);
-
     // Store and retrieve uri of image
-    const imageUrl = tokenLogo;
+    const imageUrl = await uploadMediaToCloudinary(tokenLogo);
 
     const metadata: MetadataDto = {
       name: tokenName,
@@ -122,6 +113,7 @@ export default async function handler(
       description: tokenDescription,
       image: imageUrl,
       tags,
+      creator: { name: creatorName, site: creatorWebsite },
     };
     if (tags?.length > 0) {
       metadata['tags'] = tags;
@@ -138,14 +130,16 @@ export default async function handler(
       metadata['instragram'] = socialInstagram;
     }
     // Store json file and retrieve uri of metadata
-    console.log('metadata', metadata.name);
+    const metadataJsonString = JSON.stringify(metadata); // Convert object to JSON string
+    const matedataBase64 = Buffer.from(metadataJsonString).toString('base64');
+    const metadataUrl = await uploadRawToCloudinary(matedataBase64);
 
     const tokenMetadata: TokenMetadata = {
       updateAuthority: undefined,
       mint: mint,
       name: metadata.name,
       symbol: metadata.symbol,
-      uri: 'metadataUri',
+      uri: metadataUrl,
       additionalMetadata: [],
     };
 
@@ -213,7 +207,7 @@ export default async function handler(
       requireAllSignatures: false,
       verifySignatures: false,
     });
-
+    
     return res.status(HTTP_SUCCESS).json({
       serializedTransaction,
     });

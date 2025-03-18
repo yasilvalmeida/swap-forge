@@ -1,0 +1,52 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@4.7
+
+jobs:
+  build:
+    docker:
+      - image: cimg/node:22.14
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: yarn
+  deploy-to-production:
+    docker:
+      - image: cimg/node:22.14
+    steps:
+      - checkout
+      - node/install-packages: 
+          pkg-manager: yarn
+      - add_ssh_keys:
+          fingerprints:
+            - "df:1f:c4:a0:3d:c2:7c:fc:3b:80:e9:6f:4e:c1:e3:57"
+      - run:
+          name: Add to known hosts
+          command: ssh-keyscan -H 203.161.38.145 >> ~/.ssh/known_hosts
+      - run:
+          name: Install pm2
+          command: sudo npm i -g pm2
+      - run:
+          name: Deploy to VPS Namecheap
+          command: pm2 deploy production
+
+workflows:
+  build:
+    jobs:
+      - build:
+          filters:
+            branches:
+              ignore:
+                - main
+  production:
+    jobs:
+      - build-and-test:
+          filters: &filters-production
+            branches:
+              only: main
+      - deploy-to-production:
+          filters:
+            <<: *filters-production
+          requires:
+            - "build"

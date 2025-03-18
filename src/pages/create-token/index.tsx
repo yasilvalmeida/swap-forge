@@ -74,11 +74,13 @@ import { deserializeTransaction } from '@/lib/utils/token';
 import {
   CreateTokenResponseDto,
   AddSupplierResponseDto,
+  ResizeImageResponseDto,
 } from '@/lib/models/token';
 import { updateStats } from '@/lib/utils/stats';
+import { GetServerSideProps } from 'next';
+import { WalletSendTransactionError } from '@solana/wallet-adapter-base';
 import dotenv from 'dotenv';
 import bs58 from 'bs58';
-import { GetServerSideProps } from 'next';
 
 dotenv.config();
 
@@ -86,11 +88,15 @@ const Navbar = dynamic(() => import('@/layout/navbar'), {});
 const Header = dynamic(() => import('@/layout/header'), {});
 const Footer = dynamic(() => import('@/layout/footer'), {});
 
-interface SSRPageProps {
+interface SSRCreateTokenPageProps {
   swapForgeSecret: string;
+  network: string;
 }
 
-function CreateTokenPage({ swapForgeSecret }: SSRPageProps) {
+function CreateTokenPage({
+  swapForgeSecret,
+  network,
+}: SSRCreateTokenPageProps) {
   const [schema, setSchema] = useState<
     typeof import('@/lib/validation/token').tokenFormSchema | null
   >(null);
@@ -129,14 +135,12 @@ function CreateTokenPage({ swapForgeSecret }: SSRPageProps) {
       socialInstagram: '',
       socialFacebook: '',
       tokenFee: CREATE_TOKEN_FEE,
-      voucher: false,
-      tokenVoucher: '',
     },
     mode: 'onChange',
   });
 
   const { connected, publicKey, sendTransaction } = useWallet();
-  const { connection, network } = useConnection();
+  const { connection } = useConnection({ network });
 
   const tokenName = watch('tokenName');
   const tokenSymbol = watch('tokenSymbol');
@@ -147,11 +151,10 @@ function CreateTokenPage({ swapForgeSecret }: SSRPageProps) {
   const immutable = watch('immutable');
   const customCreatorInfo = watch('customCreatorInfo');
   const createSocial = watch('createSocial');
-  const voucher = watch('voucher');
-  /* const tokenVoucher = watch('tokenVoucher'); */
 
   const [loading, setLoading] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
+  const [tokenImageHover, setTokenImageHover] = useState<boolean>(false);
   const [token, setToken] = useState<string>('');
   const [solScanUrl, setSolscanUrl] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -188,10 +191,10 @@ function CreateTokenPage({ swapForgeSecret }: SSRPageProps) {
           type: 'manual',
           message: 'Token logo is required',
         });
-      } else if (file.size > MAX_LOGO_SIZE) {
+      } else if (file.size / 1024 > MAX_LOGO_SIZE) {
         setError('tokenLogo', {
           type: 'manual',
-          message: `Size must be less than ${MAX_LOGO_SIZE}MB`,
+          message: `Size must be less than ${MAX_LOGO_SIZE}KB`,
         });
         return;
       } else if (!['image/jpeg', 'image/png'].includes(file.type)) {
@@ -201,17 +204,22 @@ function CreateTokenPage({ swapForgeSecret }: SSRPageProps) {
         });
       } else {
         const dimensions = await getImageDimensions(file);
-        if (
+        let tokenLogoBase64;
+        const checkDimensionCondition =
           dimensions.width > MAX_LOGO_WIDTH ||
-          dimensions.height > MAX_LOGO_HEIGHT
-        ) {
-          setError('tokenLogo', {
-            type: 'manual',
-            message: `Image must be exactly or lower than ${MAX_LOGO_WIDTH}x${MAX_LOGO_HEIGHT} pixels`,
-          });
-          return;
+          dimensions.height > MAX_LOGO_HEIGHT;
+        if (checkDimensionCondition) {
+          tokenLogoBase64 = await convertFileToBase64(file);
+          const resizeImageResponse = await axios.post<ResizeImageResponseDto>(
+            '/api/token-resize-image',
+            {
+              tokenLogoBase64,
+            }
+          );
+          const { resizedTokenLogoBase64 } = resizeImageResponse.data;
+          setValue('tokenLogo', resizedTokenLogoBase64);
         } else {
-          const tokenLogoBase64 = await convertFileToBase64(file);
+          tokenLogoBase64 = await convertFileToBase64(file);
           setValue('tokenLogo', tokenLogoBase64);
         }
       }
@@ -267,74 +275,102 @@ function CreateTokenPage({ swapForgeSecret }: SSRPageProps) {
     });
   }, [getValues, reset]);
 
-  const onSubmit = async (tokenFormData: TokenFormData) => {
-    try {
-      setErrorMessage('');
-      if (!publicKey) {
-        toast.error('Please connect your wallet.');
-        return;
-      }
-
-      const swapForgeAuthority = Keypair.fromSecretKey(
-        bs58.decode(swapForgeSecret)
-      );
-
-      updateStats(publicKey.toBase58());
-
-      setLoading(true);
-
-      const mint = Keypair.generate();
-      setToken(mint.publicKey.toBase58());
-
-      const createTokenResponse = await axios.post<CreateTokenResponseDto>(
-        '/api/token-create',
-        {
-          ...tokenFormData,
-          tokenSupply: removeFormatting(tokenFormData.tokenSupply),
-          swapForgePublicKey: swapForgeAuthority.publicKey,
-          walletPublicKey: publicKey,
-          mintPublicKey: mint.publicKey,
+  const onSubmit = useCallback(
+    async (tokenFormData: TokenFormData) => {
+      try {
+        setErrorMessage('');
+        if (!connected || !publicKey) {
+          toast.error('Please connect your wallet first.');
+          return;
         }
-      );
-      const { serializedTransaction } = createTokenResponse.data;
 
-      const transaction = deserializeTransaction(serializedTransaction);
+        const swapForgeAuthority = Keypair.fromSecretKey(
+          bs58.decode(swapForgeSecret)
+        );
 
-      const signatare = await sendTransaction(transaction, connection, {
-        signers: [mint, swapForgeAuthority],
-      });
-      const signatureUrl = `https://solscan.io/tx/${signatare}${
-        network === 'devnet' ? '?cluster=devnet' : ''
-      }`;
-      setSolscanUrl(signatureUrl);
+        if (process.env.NODE_ENV === 'production') {
+          updateStats(publicKey.toBase58());
+        }
 
-      setTimeout(async () => {
-        await axios.post<AddSupplierResponseDto>('/api/token-add-supplier', {
-          tokenSupply: removeFormatting(tokenFormData.tokenSupply),
-          revokeMint,
-          revokeFreeze,
-          immutable,
-          swapForgePublicKey: swapForgeAuthority.publicKey,
-          walletPublicKey: publicKey,
-          mintPublicKey: mint.publicKey,
+        setLoading(true);
+
+        const mint = Keypair.generate();
+        setToken(mint.publicKey.toBase58());
+
+        const createTokenResponse = await axios.post<CreateTokenResponseDto>(
+          '/api/token-create',
+          {
+            ...tokenFormData,
+            swapForgePublicKey: swapForgeAuthority.publicKey,
+            walletPublicKey: publicKey,
+            mintPublicKey: mint.publicKey,
+          }
+        );
+
+        const { serializedTransaction } = createTokenResponse.data;
+
+        const transaction = deserializeTransaction(serializedTransaction);
+
+        const signature = await sendTransaction(transaction, connection, {
+          signers: [mint, swapForgeAuthority],
+          preflightCommitment: 'confirmed',
+          skipPreflight: true,
         });
+        console.log('signature', signature);
+        const signatureUrl = `https://solscan.io/tx/${signature}${
+          network === 'devnet' ? '?cluster=devnet' : ''
+        }`;
+        setSolscanUrl(signatureUrl);
+
+        setTimeout(async () => {
+          const addSupplierResponse = await axios.post<AddSupplierResponseDto>(
+            '/api/token-add-supplier',
+            {
+              tokenSupply: removeFormatting(tokenFormData.tokenSupply),
+              revokeMint,
+              revokeFreeze,
+              immutable,
+              swapForgePublicKey: swapForgeAuthority.publicKey,
+              walletPublicKey: publicKey,
+              mintPublicKey: mint.publicKey,
+            }
+          );
+          const message = addSupplierResponse.data?.message;
+          setLoading(false);
+          if (!message.includes('Failed')) {
+            setOpen(true);
+            toast.success('Your token has been created!');
+          } else {
+            toast.error(message);
+          }
+        }, MAX_TIMEOUT_TOKEN_MINT);
+      } catch (error) {
+        console.log('on submit error', error);
+        if (error instanceof WalletSendTransactionError) {
+          toast.error(error.message);
+        } else if (error instanceof AxiosError) {
+          const axiosError = error as AxiosError;
+          const data = axiosError.response?.data;
+          toast.error((data as ErrorResponseDto)?.error);
+          setErrorMessage((data as ErrorResponseDto)?.error);
+        } else {
+          toast.error('Transaction failed. Please try again.');
+        }
         setLoading(false);
-        setOpen(true);
-        toast.success('Your token has been created!');
-      }, MAX_TIMEOUT_TOKEN_MINT);
-    } catch (error) {
-      console.log('error', error);
-      const axiosError = error as AxiosError;
-      if (axiosError) {
-        const data = axiosError.response?.data;
-        toast.error((data as ErrorResponseDto).error);
-        setErrorMessage((data as ErrorResponseDto).error);
-      } else {
-        console.log(JSON.stringify(error));
       }
-      setLoading(false);
-    }
-  };
+    },
+    [
+      connected,
+      connection,
+      immutable,
+      network,
+      publicKey,
+      revokeFreeze,
+      revokeMint,
+      sendTransaction,
+      swapForgeSecret,
+    ]
+  );
 
   useEffect(() => {
     import('@/lib/validation/token').then((module) => {
@@ -413,12 +449,12 @@ function CreateTokenPage({ swapForgeSecret }: SSRPageProps) {
 
       {/* Wallet Connection Button */}
       <div className='absolute right-4 top-4'>
-        <WalletButton />
+        <WalletButton network={network} />
       </div>
 
       {/* Token Creation Form */}
       <div className='mx-auto flex max-w-6xl flex-col gap-6 px-4 py-20 md:flex-row'>
-        <div className='flex flex-col md:w-2/3'>
+        <div className='order-2 flex flex-col md:order-1 md:w-2/3'>
           <h1 className='mb-8 text-center text-4xl font-bold'>
             Create Your Token
           </h1>
@@ -535,23 +571,29 @@ function CreateTokenPage({ swapForgeSecret }: SSRPageProps) {
               </div>
             </div>
 
-            <div className='mt-3 flex w-full flex-col justify-between gap-3 md:flex-row'>
-              <div className='flex w-full flex-col gap-1'>
+            <div className='mt-3 flex w-full flex-col justify-between md:flex-row'>
+              <div className='flex w-1/3 flex-col gap-1'>
                 <Label htmlFor='tokenLogo'>
                   Token Logo <span className='text-red-500'>*</span>
                 </Label>
                 {tokenLogo ? (
-                  <div className='relative flex justify-start'>
-                    <XCircle
-                      onClick={onRemoveTokenLogo}
-                      className='absolute left-1 top-3 h-4 w-4 cursor-pointer text-gray-400 hover:text-yellow-400'
-                    />
+                  <div
+                    className='relative flex justify-start'
+                    onMouseEnter={() => setTokenImageHover(true)}
+                    onMouseLeave={() => setTokenImageHover(false)}
+                  >
+                    {tokenImageHover && (
+                      <XCircle
+                        onClick={onRemoveTokenLogo}
+                        className='absolute right-4 top-1 h-4 w-4 cursor-pointer text-gray-400 hover:text-yellow-400'
+                      />
+                    )}
                     <Image
                       src={tokenLogo}
                       alt='tokenLogo'
                       width={200}
                       height={200}
-                      className='mt-2 rounded-md'
+                      className='rounded-md'
                     />
                   </div>
                 ) : (
@@ -821,6 +863,9 @@ function CreateTokenPage({ swapForgeSecret }: SSRPageProps) {
                   />
                   <Label htmlFor='createSocial'>Customize Token Social</Label>
                 </div>
+                {createSocial && (
+                  <span className='text-xs text-yellow-400'>Free</span>
+                )}
               </div>
 
               {createSocial && (
@@ -894,37 +939,6 @@ function CreateTokenPage({ swapForgeSecret }: SSRPageProps) {
               )}
             </div>
 
-            <div className='mb-6 flex w-full flex-col justify-between gap-2'>
-              <div className='flex w-full flex-row items-center justify-between gap-2'>
-                <div className='flex flex-row items-center gap-1'>
-                  <Controller
-                    name='voucher'
-                    control={control}
-                    render={({ field }) => (
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    )}
-                  />
-                  <Label htmlFor='voucher'>Voucher</Label>
-                </div>
-              </div>
-
-              {voucher && (
-                <div className='flex w-full flex-col justify-between gap-3 md:flex-row'>
-                  <div className='flex w-full flex-col gap-1'>
-                    <Input
-                      type='text'
-                      id='tokenVoucher'
-                      {...register('tokenVoucher')}
-                      placeholder='123456789'
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
             {connected ? (
               <Button
                 type='submit'
@@ -957,46 +971,46 @@ function CreateTokenPage({ swapForgeSecret }: SSRPageProps) {
             </span>
           )}
         </div>
-        <div className='flex flex-col gap-3 md:w-1/3'>
+        <div className='order-1 flex flex-col gap-3 md:order-2 md:w-1/3'>
           <h2 className='mb-5 text-center text-4xl font-bold'>How to use?</h2>
           <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
-            <span>Step 1</span>
+            <span className='text-yellow-400'>Step 1</span>
             <span>Connect your Solana wallet</span>
           </div>
           <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
-            <span>Step 2</span>
+            <span className='text-yellow-400'>Step 2</span>
             <span>Specify the desired name and symbol</span>
           </div>
           <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
-            <span>Step 3</span>
+            <span className='text-yellow-400'>Step 3</span>
             <span>Select the decimals quantity</span>
           </div>
           <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
-            <span>Step 4</span>
+            <span className='text-yellow-400'>Step 4</span>
             <span>Set the amount of suppliers</span>
           </div>
           <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
-            <span>Step 5</span>
+            <span className='text-yellow-400'>Step 5</span>
             <span>Upload a 500x500 or less image</span>
           </div>
           <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
-            <span>Step 6</span>
+            <span className='text-yellow-400'>Step 6</span>
             <span>Provide a brief description</span>
           </div>
           <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
-            <span>Step 7</span>
+            <span className='text-yellow-400'>Step 7</span>
             <span>Add tags or keywords</span>
           </div>
           <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
-            <span>Step 8</span>
+            <span className='text-yellow-400'>Step 8</span>
             <span>Click on Create Token</span>
           </div>
           <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
-            <span>Step 9</span>
+            <span className='text-yellow-400'>Step 9</span>
             <span>Accept the transaction.</span>
           </div>
-          <div className='border-1 flex flex-col justify-center gap-2 rounded border-gray-500 p-2 md:flex-row'>
-            <span> 🚀🚀🚀 Your token is ready 🚀🚀🚀</span>
+          <div className='border-1 flex justify-center gap-2 rounded border-gray-500 p-2 md:flex-row md:justify-start'>
+            <span>Your token is ready 🚀🚀🚀</span>
           </div>
         </div>
       </div>
@@ -1106,10 +1120,13 @@ function CreateTokenPage({ swapForgeSecret }: SSRPageProps) {
 }
 
 export const getServerSideProps: GetServerSideProps<
-  SSRPageProps
+  SSRCreateTokenPageProps
 > = async () => {
   return {
-    props: { swapForgeSecret: process.env.SWAPFORGE_WALLET_SECRET || '' },
+    props: {
+      swapForgeSecret: process.env.SWAPFORGE_WALLET_SECRET || '',
+      network: process.env.SOLANA_NETWORK || '',
+    },
   };
 };
 
