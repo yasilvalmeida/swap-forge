@@ -1,5 +1,3 @@
-'use client';
-
 import '@/style/globals.css';
 import type { AppProps } from 'next/app';
 import { ToastContainer } from 'react-toastify';
@@ -36,16 +34,6 @@ export default function App({ Component, pageProps }: AppProps) {
       console.log('Connection-provider', error);
     }
   }, []);
-
-  window.onerror = function (message, source, lineno, colno, error) {
-    console.error('Global error caught:');
-    console.error('Message:', message);
-    console.error('Source:', source);
-    console.error('Line number:', lineno);
-    console.error('Column number:', colno);
-    console.error('Error object:', error);
-    return true; // Prevent the default error handling
-  };
 
   return (
     <>

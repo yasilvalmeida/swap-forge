@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'react-toastify';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { DialogDescription } from '@radix-ui/react-dialog';
@@ -27,7 +27,7 @@ interface IProps {
 }
 
 const WalletButton = ({ network }: IProps) => {
-  const { disconnect, select, connected, publicKey, wallets, wallet } =
+  const { disconnect, select, connected, publicKey, wallets } =
     useWallet();
   const { connection } = useConnection({ network });
 
@@ -60,19 +60,6 @@ const WalletButton = ({ network }: IProps) => {
   /* const onGetReferalCode = useCallback(() => {
     setOpenGetReferalCode(true);
   }, []); */
-
-  /* useEffect(() => {
-    if (!wallet?.adapter) return;
-
-    const handleError = (error: Error) => {
-      console.error('Wallet adapter error on useEffect:', error);
-    };
-
-    wallet.adapter.on('error', handleError);
-    return () => {
-      wallet.adapter.off('error', handleError);
-    };
-  }, [wallet]); */
 
   return connected ? (
     <>
