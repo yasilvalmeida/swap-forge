@@ -26,7 +26,7 @@ module.exports = {
       'pre-deploy-local': '',
       'post-deploy':
         'export APP_ENV=production && yarn && yarn build && pm2 reload ecosystem.config.js --env production && pm2 save',
-      'pre-setup': 'npm install -g pm2',
+      'pre-setup': '',
       ssh_options: 'ForwardAgent=yes',
     },
   },
