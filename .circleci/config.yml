@@ -12,7 +12,7 @@ jobs:
       - node/install-packages:
           pkg-manager: yarn
       - setup_remote_docker:
-          version: 22.14.0
+          version: 20.10.14
       - run:
           name: install dependencies
           command: yarn
