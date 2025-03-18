@@ -45,10 +45,10 @@ jobs:
           command: sudo npm i -g pm2
       - run:
           name: Initialize deployment directory
-          command: pm2 deploy ../ecosystem.config.js production setup
+          command: pm2 deploy ecosystem.config.js production setup
       - run:
           name: Deploy to VPS Namecheap
-          command: pm2 deploy ../ecosystem.config.js production
+          command: pm2 deploy ecosystem.config.js production
 
 workflows:
   build:
