@@ -58,7 +58,7 @@ import {
 import { toast } from 'react-toastify';
 import { ErrorResponseDto } from '@/lib/models';
 import axios, { AxiosError } from 'axios';
-import useConnection from '@/hook/token';
+import useConnection from '@/components/hook/token';
 import {
   Dialog,
   DialogContent,
@@ -84,9 +84,9 @@ import bs58 from 'bs58';
 
 dotenv.config();
 
-const Navbar = dynamic(() => import('@/layout/navbar'), {});
-const Header = dynamic(() => import('@/layout/header'), {});
-const Footer = dynamic(() => import('@/layout/footer'), {});
+const Navbar = dynamic(() => import('@/components/layout/navbar'), {});
+const Header = dynamic(() => import('@/components/layout/header'), {});
+const Footer = dynamic(() => import('@/components/layout/footer'), {});
 
 interface SSRCreateTokenPageProps {
   swapForgeSecret: string;

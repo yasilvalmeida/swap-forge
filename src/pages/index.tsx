@@ -1,8 +1,8 @@
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 
-const Header = dynamic(() => import('@/layout/header'), {});
-const Footer = dynamic(() => import('@/layout/footer'), {});
+const Header = dynamic(() => import('@/components/layout/header'), {});
+const Footer = dynamic(() => import('@/components/layout/footer'), {});
 
 export default function Home() {
   return (

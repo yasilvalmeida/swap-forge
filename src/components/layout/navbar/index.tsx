@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import logo from '../../../public/swap-forge.png';
+import logo from '../../../../public/swap-forge.png';
 import { useRouter } from 'next/router';
 
 export default function Navbar() {

@@ -21,7 +21,8 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "typeRoots": ["./node_modules/@types", "./src/types"]
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "types": ["@solana/wallet-adapter-react", "@solana/wallet-adapter-react-ui"]
   },
   "include": [
     "next-env.d.ts",
@@ -29,6 +30,6 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "types/**/*.d.ts"
-  ],
+, "src/components/ui/wallet-button.tsx.bak"  ],
   "exclude": ["node_modules"]
 }
