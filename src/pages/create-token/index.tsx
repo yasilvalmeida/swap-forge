@@ -449,7 +449,7 @@ function CreateTokenPage({
 
       {/* Wallet Connection Button */}
       <div className='absolute right-4 top-4'>
-        <WalletButton network={network} />
+        <WalletButton />
       </div>
 
       {/* Token Creation Form */}

@@ -22,7 +22,6 @@
       "@/*": ["./src/*"]
     },
     "typeRoots": ["./node_modules/@types", "./src/types"],
-    "types": ["@solana/wallet-adapter-react", "@solana/wallet-adapter-react-ui"]
   },
   "include": [
     "next-env.d.ts",
