@@ -27,28 +27,12 @@ jobs:
           name: Add to known hosts
           command: ssh-keyscan -H 203.161.38.145 >> ~/.ssh/known_hosts
       - run:
-          name: Install pm2
-          command: sudo npm i -g pm2
-      - run:
-          name: Debug SSH Keys
-          command: ls -la ~/.ssh
-      - run:
-          name: Create Public Key
-          command: ssh-keygen -y -f ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386 > ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386.pub
-      - run:
-          name: Check Public Key
-          command: cat ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386.pub
-      - run:
-          name: Test SSH Connection
-          command: |
-            ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386 root@203.161.38.145 "echo 'SSH connection successful'"
-      - run:
           name: Deploy Application via SSH
           command: |
             ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386 root@203.161.38.145 "
               cd /home/webapp/swapforge &&
               sudo npm i -g pm2 &&
-              pm2 deploy ecosystem.config.js production
+              pm2 deploy ../cosystem.config.js production
             "
 
 workflows:
