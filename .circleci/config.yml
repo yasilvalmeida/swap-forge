@@ -41,11 +41,11 @@ jobs:
       - run:
           name: Test SSH Connection
           command: |
-            ssh -vvv -o ConnectTimeout=10 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386 root@203.161.38.145 "echo 'SSH connection successful'"
+            ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386 root@203.161.38.145 "echo 'SSH connection successful'"
       - run:
           name: Deploy Application via SSH
           command: |
-            ssh -vvv -o ConnectTimeout=10 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386 root@203.161.38.145 "
+            ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386 root@203.161.38.145 "
               cd /home/webapp/swapforge &&
               git pull origin main &&
               pm2 deploy ecosystem.config.js production
