@@ -30,6 +30,9 @@ jobs:
           name: Install pm2
           command: sudo npm i -g pm2
       - run:
+          name: Debug SSH Keys
+          command: ls -la ~/.ssh
+      - run:
           name: Deploy Application via SSH
           command: |
             ssh -o StrictHostKeyChecking=no -i ~/.ssh/circleci_vps_key root@203.161.38.145 "
