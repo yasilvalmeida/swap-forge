@@ -33,6 +33,10 @@ jobs:
           name: Debug SSH Keys
           command: ls -la ~/.ssh
       - run:
+          name: Test SSH Connection
+          command: |
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386 root@203.161.38.145 "echo 'SSH connection successful'"
+      - run:
           name: Deploy Application via SSH
           command: |
             ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386 root@203.161.38.145 "
