@@ -35,7 +35,7 @@ jobs:
       - run:
           name: Deploy Application via SSH
           command: |
-            ssh -o StrictHostKeyChecking=no -i ~/.ssh/circleci_vps_key root@203.161.38.145 "
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386 root@203.161.38.145 "
               cd /home/webapp/swapforge &&
               git pull origin main &&
               pm2 deploy ecosystem.config.js production
