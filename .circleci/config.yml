@@ -34,7 +34,7 @@ jobs:
           command: ls -la ~/.ssh
       - run:
           name: Create Public Key
-          command: ssh-keygen -y -f ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386y > ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386.pub
+          command: ssh-keygen -y -f ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386 > ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386.pub
       - run:
           name: Check Public Key
           command: cat ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386.pub
