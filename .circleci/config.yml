@@ -32,6 +32,9 @@ jobs:
             ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386 root@203.161.38.145 "
               cd /home/webapp/swapforge &&
               sudo npm i -g pm2 yarn &&
+              curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash &&
+              nvm --version && 
+              nvm install v20.18 &&
               nvm use v20.18 &&
               pm2 deploy ../ecosystem.config.js production
             "
