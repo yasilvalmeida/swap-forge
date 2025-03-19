@@ -25,7 +25,7 @@ module.exports = {
       path: '/home/webapp/swapforge',
       'pre-deploy-local': '',
       'post-deploy':
-        'export APP_ENV=production && yarn && yarn build && pm2 reload ../ecosystem.config.js --env production && pm2 save',
+        'export APP_ENV=production && yarn && yarn build && pm2 reload ecosystem.config.js --env production && pm2 save',
       'pre-setup': '',
       ssh_options: 'ForwardAgent=yes',
     },
