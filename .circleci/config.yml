@@ -15,28 +15,20 @@ jobs:
       - run:
           name: Run build
           command: yarn build
-      - persist_to_workspace:
-          root: .
-          paths:
-            - build
-            - node_modules
-            - ecosystem.config.js 
 
   deploy-production:
     docker:
       - image: cimg/node:20.18
     steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: List workspace files
-          command: ls -la
       - add_ssh_keys:
           fingerprints:
             - $SSH_FINGERPRINT
       - run:
-          name: Create .ssh directory
-          command: mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          name: Check fingerprints
+          command: echo $SSH_FINGERPRINT
+      - run:
+          name: Check Host
+          command: echo $VPS_IP      
       - run:
           name: Add to known hosts
           command: ssh-keyscan -H $VPS_IP >> ~/.ssh/known_hosts

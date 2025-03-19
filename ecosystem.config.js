@@ -22,7 +22,7 @@ module.exports = {
       ref: 'origin/main',
       repo: 'git@github.com:yasilvalmeida/swap-forge.git',
       fetch: 'all',
-      path: '/home/webapp/swapforge/production',
+      path: '/home/webapp/swapforge',
       'pre-deploy-local': '',
       'post-deploy':
         'export APP_ENV=production && yarn && yarn build && pm2 reload ecosystem.config.js --env production && pm2 save',
