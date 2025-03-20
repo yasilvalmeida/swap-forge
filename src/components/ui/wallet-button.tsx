@@ -65,7 +65,7 @@ const WalletButton = () => {
           setBalance(balance / LAMPORTS_PER_SOL);
         } catch (error) {
           console.log('error', error);
-          toast.error('Failed to get balance');
+          toast.error('Insufficient Balance!');
         }
       }
     }
