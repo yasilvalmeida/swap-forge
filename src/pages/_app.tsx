@@ -2,6 +2,8 @@ import App, { AppContext, AppProps } from 'next/app';
 import { ToastContainer } from 'react-toastify';
 import { TOAST_TIMEOUT } from '@/lib/constants';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { DefaultSeo } from 'next-seo';
+import SEO from '../seo.config';
 import AppWalletProvider from '@/components/provider/wallet';
 import dotenv from 'dotenv';
 
@@ -29,6 +31,7 @@ function MyApp({ Component, pageProps, solanaNetwork }: CustomAppProps) {
         pauseOnHover
         theme='light'
       />
+      <DefaultSeo {...SEO} />
       <Component {...pageProps} />
     </AppWalletProvider>
   );
