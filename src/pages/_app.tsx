@@ -1,4 +1,5 @@
 import App, { AppContext, AppProps } from 'next/app';
+import { useMemo } from 'react';
 import { ToastContainer } from 'react-toastify';
 import { GA_TRACKING_ID, TOAST_TIMEOUT } from '@/lib/constants';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
@@ -18,8 +19,12 @@ interface CustomAppProps extends AppProps {
 }
 
 function MyApp({ Component, pageProps, solanaNetwork }: CustomAppProps) {
+  const network = useMemo(() => {
+    return solanaNetwork as WalletAdapterNetwork;
+  }, [solanaNetwork]);
+
   return (
-    <AppWalletProvider network={solanaNetwork as WalletAdapterNetwork}>
+    <AppWalletProvider network={network}>
       <ToastContainer
         position='top-right'
         autoClose={TOAST_TIMEOUT}

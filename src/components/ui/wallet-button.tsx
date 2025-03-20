@@ -31,6 +31,7 @@ import { Input } from './input';
 import { getWallet } from '@/lib/utils/wallet';
 import { REFERRAL_LINK } from '@/lib/constants';
 import { AffiliateProgramResume } from '@/components/layout/affiliate-program';
+import { isMobile } from 'react-device-detect';
 
 const WalletMultiButton = dynamic(
   () =>
@@ -76,18 +77,18 @@ const WalletButton = () => {
       <Menubar className='w-full text-gray-900'>
         <MenubarMenu>
           <MenubarTrigger className='text-gray-900'>
-            <span className='cursor-pointer text-gray-900'>
+            <span className='text-gray-900 cursor-pointer'>
               {`Connected: ${publicKey?.toBase58().slice(0, 6)}...`}
             </span>
           </MenubarTrigger>
-          <MenubarContent className='cursor-pointer text-gray-900'>
-            <MenubarItem className='cursor-pointer text-gray-900'>
+          <MenubarContent className='text-gray-900 cursor-pointer'>
+            <MenubarItem className='text-gray-900 cursor-pointer'>
               My balance {balance ?? 0} SOL
             </MenubarItem>
             {referralCode && (
               <MenubarItem
                 onClick={onGetReferalCode}
-                className='cursor-pointer text-gray-900'
+                className='text-gray-900 cursor-pointer'
               >
                 Get Referal Code
               </MenubarItem>
@@ -95,7 +96,7 @@ const WalletButton = () => {
             <MenubarSeparator />
             <MenubarItem
               onClick={disconnect}
-              className='cursor-pointer text-gray-900'
+              className='text-gray-900 cursor-pointer'
             >
               Disconnect
             </MenubarItem>
@@ -112,7 +113,7 @@ const WalletButton = () => {
                 Get Your Referral Code
               </DialogDescription>
             </DialogHeader>
-            <div className='mt-4 flex items-center space-x-2'>
+            <div className='flex items-center mt-4 space-x-2'>
               <div className='grid flex-1 gap-2'>
                 <Label htmlFor='token' className='sr-only'>
                   Token
@@ -127,7 +128,7 @@ const WalletButton = () => {
                     toast.success('Referal Code copied!');
                   }}
                   size='sm'
-                  className='cursor-pointer px-3'
+                  className='px-3 cursor-pointer'
                 >
                   <span className='sr-only'>Copy</span>
                   <Copy />
@@ -153,9 +154,7 @@ const WalletButton = () => {
       </Dialog>
     </>
   ) : (
-    <>
-      <WalletMultiButton />
-    </>
+    <>{isMobile ? <WalletMultiButton /> : <></>}</>
   );
 };
 
