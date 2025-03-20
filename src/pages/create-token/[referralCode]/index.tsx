@@ -65,9 +65,11 @@ import {
   AddSupplierResponseDto,
   ResizeImageResponseDto,
 } from '@/lib/models/token';
-import { getSumOfReferrals, updateWallet } from '@/lib/utils/wallet';
 import { GetServerSideProps } from 'next';
 import { WalletSendTransactionError } from '@solana/wallet-adapter-base';
+import { database } from '@/lib/mongodb';
+import { WALLET_COLLECTION, WalletDto } from '@/lib/models/wallet';
+import { updateWallet } from '@/lib/utils/wallet';
 import FrequentAnswersAndQuestions from '@/components/layout/frequent-answer-question';
 import dotenv from 'dotenv';
 import bs58 from 'bs58';
@@ -81,11 +83,13 @@ const Footer = dynamic(() => import('@/components/layout/footer'), {});
 interface SSRCreateTokenPageProps {
   swapForgeSecret: string;
   network: string;
+  referralCode: string;
 }
 
 function CreateTokenPage({
   swapForgeSecret,
   network,
+  referralCode,
 }: SSRCreateTokenPageProps) {
   const [schema, setSchema] = useState<
     typeof import('@/lib/validation/token').tokenFormSchema | null
@@ -146,7 +150,6 @@ function CreateTokenPage({
   const [open, setOpen] = useState<boolean>(false);
   const [tokenImageHover, setTokenImageHover] = useState<boolean>(false);
   const [token, setToken] = useState<string>('');
-  const [discount, setDiscount] = useState<number>(0);
   const [solScanUrl, setSolscanUrl] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
@@ -165,6 +168,9 @@ function CreateTokenPage({
       totalFee = Number(sum.toFixed(2));
     }
     const sum = totalFee + CREATE_TOKEN_FEE;
+    /* if (discount > 0) {
+      sum = sum - sum * discount;
+    } */
     const computedTotalFee = Number(sum.toFixed(2));
     setValue('tokenFee', computedTotalFee);
     return computedTotalFee;
@@ -281,7 +287,7 @@ function CreateTokenPage({
           bs58.decode(swapForgeSecret)
         );
 
-        updateWallet(publicKey.toBase58());
+        updateWallet(publicKey.toBase58(), referralCode);
 
         setLoading(true);
 
@@ -356,11 +362,13 @@ function CreateTokenPage({
       immutable,
       network,
       publicKey,
+      referralCode,
       reset,
       revokeFreeze,
       revokeMint,
       sendTransaction,
       swapForgeSecret,
+      tokenFee,
     ]
   );
 
@@ -369,18 +377,6 @@ function CreateTokenPage({
       setSchema(module.tokenFormSchema);
     });
   }, []);
-
-  useEffect(() => {
-    getDiscount();
-    return () => {};
-
-    async function getDiscount() {
-      if (publicKey) {
-        const discount = (await getSumOfReferrals(publicKey.toBase58())) || 0;
-        setDiscount(discount);
-      }
-    }
-  }, [connection, publicKey]);
 
   return (
     <div className='min-h-screen bg-gray-900 text-white'>
@@ -477,6 +473,10 @@ function CreateTokenPage({
           <h1 className='mb-8 text-center text-4xl font-bold'>
             Create Your Token
           </h1>
+          <span className='mb-2 flex flex-row justify-center gap-1 text-sm'>
+            <span>Referral Code</span>
+            <span className='text-yellow-400'>{referralCode}</span>
+          </span>
           <form
             onSubmit={handleSubmit(onSubmit)}
             className='border-1 flex flex-col rounded border-gray-500 p-3'
@@ -979,7 +979,7 @@ function CreateTokenPage({
           {tokenFee && (
             <span className='text-xs mt-3 text-center italic text-yellow-400'>
               The cost of Token creation is {computedTotalFee} SOL, covering all
-              fees {discount > 0 ? ` and including of ${discount}%` : ''}!.
+              fees!.
             </span>
           )}
           {errorMessage && (
@@ -1041,11 +1041,39 @@ function CreateTokenPage({
 
 export const getServerSideProps: GetServerSideProps<
   SSRCreateTokenPageProps
-> = async () => {
+> = async (context) => {
+  const referralCode = context.query?.referralCode as string;
+  if (!referralCode) {
+    return {
+      redirect: {
+        permanent: false,
+        destination: '/create-token',
+      },
+      props: {},
+    };
+  }
+
+  const wallet = await database
+    .collection<WalletDto>(WALLET_COLLECTION)
+    .findOne({
+      referralCode,
+    });
+
+  if (!wallet?._id) {
+    return {
+      redirect: {
+        permanent: false,
+        destination: '/create-token',
+      },
+      props: {},
+    };
+  }
+
   return {
     props: {
       swapForgeSecret: process.env.SWAPFORGE_WALLET_SECRET || '',
       network: process.env.SOLANA_NETWORK || '',
+      referralCode,
     },
   };
 };

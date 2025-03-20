@@ -26,7 +26,6 @@ import {
 } from '@/lib/models/token';
 import { ErrorResponseDto } from '@/lib/models';
 import {
-  HTTP_FORBIDDEN,
   HTTP_INTERNAL_SERVER_ERROR,
   HTTP_METHOD_NOT_ALLOWED,
   HTTP_NOT_FOUND,
@@ -85,17 +84,6 @@ export default async function handler(
   }
   try {
     const connection = getConnection();
-
-    const walletBalance = await connection.getBalance(wallet);
-
-    if (
-      process.env.NODE_ENV === 'production' &&
-      walletBalance / LAMPORTS_PER_SOL < tokenFee
-    ) {
-      return res
-        .status(HTTP_FORBIDDEN)
-        .json({ error: 'Insufficient balance!' });
-    }
 
     const transferFeesInstruction = SystemProgram.transfer({
       fromPubkey: wallet,
@@ -207,7 +195,7 @@ export default async function handler(
       requireAllSignatures: false,
       verifySignatures: false,
     });
-    
+
     return res.status(HTTP_SUCCESS).json({
       serializedTransaction,
     });

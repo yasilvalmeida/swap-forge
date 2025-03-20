@@ -8,27 +8,28 @@ import {
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { clusterApiUrl } from '@solana/web3.js';
-import {
-  PhantomWalletAdapter,
-  SolflareWalletAdapter,
-} from '@solana/wallet-adapter-wallets';
+import { toast } from 'react-toastify';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
-export default function AppWalletProvider({
-  children,
-}: {
+interface AppWalletProviderProps {
+  network: WalletAdapterNetwork;
   children: React.ReactNode;
-}) {
-  const network = WalletAdapterNetwork.Mainnet;
+}
+
+export default function AppWalletProvider({
+  network,
+  children,
+}: AppWalletProviderProps) {
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
-  const wallets = useMemo(
-    () => [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
-    []
-  );
+  const wallets = useMemo(() => [], []);
 
   const onError = useCallback((walletError: Error) => {
     try {
-      console.log('walletError', walletError);
+      if (walletError.message.includes('User rejected the request')) {
+        toast.error('You rejected the wallet connection. Please try again.');
+      } else {
+        toast.error(walletError.message);
+      }
     } catch (error) {
       console.log('Connection-provider', error);
     }

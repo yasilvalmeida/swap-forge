@@ -1,17 +1,22 @@
-import '@/style/globals.css';
-import type { AppProps } from 'next/app';
+import App, { AppContext, AppProps } from 'next/app';
 import { ToastContainer } from 'react-toastify';
 import { TOAST_TIMEOUT } from '@/lib/constants';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import AppWalletProvider from '@/components/provider/wallet';
 import dotenv from 'dotenv';
 
+import '@/style/globals.css';
 import 'react-toastify/dist/ReactToastify.css';
 
 dotenv.config();
 
-export default function App({ Component, pageProps }: AppProps) {
+interface CustomAppProps extends AppProps {
+  solanaNetwork: string;
+}
+
+function MyApp({ Component, pageProps, solanaNetwork }: CustomAppProps) {
   return (
-    <AppWalletProvider>
+    <AppWalletProvider network={solanaNetwork as WalletAdapterNetwork}>
       <ToastContainer
         position='top-right'
         autoClose={TOAST_TIMEOUT}
@@ -24,8 +29,17 @@ export default function App({ Component, pageProps }: AppProps) {
         pauseOnHover
         theme='light'
       />
-      <ToastContainer />
       <Component {...pageProps} />
     </AppWalletProvider>
   );
 }
+
+MyApp.getInitialProps = async (appContext: AppContext) => {
+  const appProps = await App.getInitialProps(appContext);
+  return {
+    ...appProps,
+    solanaNetwork: process.env.SOLANA_NETWORK || 'devnet',
+  };
+};
+
+export default MyApp;

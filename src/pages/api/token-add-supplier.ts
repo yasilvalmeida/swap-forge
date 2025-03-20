@@ -23,10 +23,16 @@ import {
 } from '@/lib/constants/http';
 import { AddSupplierRequestDto } from '@/lib/models/token';
 import { getConnection } from '@/lib/utils/token';
-import dotenv from 'dotenv';
-import bs58 from 'bs58';
 import { MAX_TIMEOUT_TOKEN_MINT } from '@/lib/constants/token';
 import { sleep } from '@/lib/utils';
+import { database } from '@/lib/mongodb';
+import {
+  WALLET_COLLECTION,
+  WalletDto,
+  WalletRequestDto,
+} from '@/lib/models/wallet';
+import dotenv from 'dotenv';
+import bs58 from 'bs58';
 
 dotenv.config();
 
@@ -64,6 +70,7 @@ export default async function handler(
       bs58.decode(process.env.SWAPFORGE_WALLET_SECRET || '')
     );
 
+    await sleep(MAX_TIMEOUT_TOKEN_MINT);
     const tokenAccount = await createAccount(
       connection,
       swapForgeAuthority,
@@ -75,8 +82,7 @@ export default async function handler(
     );
 
     const amount = (tokenSupply * LAMPORTS_PER_SOL) / 1000;
-    await sleep(MAX_TIMEOUT_TOKEN_MINT)
-
+    await sleep(MAX_TIMEOUT_TOKEN_MINT);
     await mintTo(
       connection,
       swapForgeAuthority,
@@ -130,15 +136,26 @@ export default async function handler(
       transaction.add(revokeMintAuthorityInstruction);
     }
 
-    
-
     const { blockhash } = await connection.getLatestBlockhash();
 
     transaction.recentBlockhash = blockhash;
 
-    await sendAndConfirmTransaction(connection, transaction, [
-      swapForgeAuthority,
+    const [, storedWallet] = await Promise.all([
+      await sendAndConfirmTransaction(connection, transaction, [
+        swapForgeAuthority,
+      ]),
+      database.collection<WalletDto>(WALLET_COLLECTION).findOne({
+        walletAddress: walletPublicKey,
+      }),
     ]);
+
+    await database.collection<WalletRequestDto>(WALLET_COLLECTION).updateOne(
+      { _id: storedWallet?._id },
+      {
+        $inc: { tokensCreated: 1 },
+      },
+      { upsert: true }
+    );
 
     return res.status(HTTP_SUCCESS).json({
       message: 'Mint Success',
