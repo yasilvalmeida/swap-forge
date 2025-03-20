@@ -67,7 +67,6 @@ import {
 } from '@/lib/models/token';
 import { getSumOfReferrals, updateWallet } from '@/lib/utils/wallet';
 import { GetServerSideProps } from 'next';
-import { WalletSendTransactionError } from '@solana/wallet-adapter-base';
 import FrequentAnswersAndQuestions from '@/components/layout/frequent-answer-question';
 import dotenv from 'dotenv';
 import bs58 from 'bs58';
@@ -304,7 +303,7 @@ function CreateTokenPage({
         const { serializedTransaction } = createTokenResponse.data;
 
         const transaction = deserializeTransaction(serializedTransaction);
-
+        
         const signature = await sendTransaction(transaction, connection, {
           signers: [mint, swapForgeAuthority],
         });
@@ -336,13 +335,7 @@ function CreateTokenPage({
           toast.error(message);
         }
       } catch (error) {
-        if (error instanceof WalletSendTransactionError) {
-          if (error.message.includes('User rejected the request')) {
-            toast.error('You rejected the transaction. Please try again.');
-          } else {
-            toast.error(error.message);
-          }
-        } else if (error instanceof AxiosError) {
+        if (error instanceof AxiosError) {
           const axiosError = error as AxiosError;
           const data = axiosError.response?.data;
           toast.error((data as ErrorResponseDto)?.error);
@@ -983,7 +976,7 @@ function CreateTokenPage({
           {tokenFee && (
             <span className='text-xs mt-3 text-center italic text-yellow-400'>
               The cost of Token creation is {computedTotalFee} SOL, covering all
-              fees {discount > 0 ? ` and including of ${discount}%` : ''}!.
+              fees{discount > 0 ? ` and including of ${discount}%` : ''}!.
             </span>
           )}
           {errorMessage && (

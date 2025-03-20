@@ -7,10 +7,12 @@ import { GoogleAnalytics } from '@next/third-parties/google';
 import { DefaultSeo } from 'next-seo';
 import SEO from '../seo.config';
 import AppWalletProvider from '@/components/provider/wallet';
+import ErrorBoundary from '@/components/layout/error-bondary';
 import dotenv from 'dotenv';
 
 import '@/style/globals.css';
 import 'react-toastify/dist/ReactToastify.css';
+/* import { useWallet } from '@solana/wallet-adapter-react'; */
 
 dotenv.config();
 
@@ -19,28 +21,39 @@ interface CustomAppProps extends AppProps {
 }
 
 function MyApp({ Component, pageProps, solanaNetwork }: CustomAppProps) {
+  /* const { wallet, connected } = useWallet(); */
   const network = useMemo(() => {
     return solanaNetwork as WalletAdapterNetwork;
   }, [solanaNetwork]);
 
+  /* useEffect(() => {
+    if (connected && wallet) {
+      wallet.adapter.on('error', (error) => {
+        console.error('Wallet adapter error', error);
+      });
+    }
+  }, [connected, wallet]); */
+
   return (
-    <AppWalletProvider network={network}>
-      <ToastContainer
-        position='top-right'
-        autoClose={TOAST_TIMEOUT}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme='light'
-      />
-      <DefaultSeo {...SEO} />
-      <GoogleAnalytics gaId={GA_TRACKING_ID} />
-      <Component {...pageProps} />
-    </AppWalletProvider>
+    <ErrorBoundary fallback={<h1>Something went wrong.</h1>}>
+      <AppWalletProvider network={network}>
+        <ToastContainer
+          position='top-right'
+          autoClose={TOAST_TIMEOUT}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme='light'
+        />
+        <DefaultSeo {...SEO} />
+        <GoogleAnalytics gaId={GA_TRACKING_ID} />
+        <Component {...pageProps} />
+      </AppWalletProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -1,53 +1,59 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { ReactNode, useState, useEffect } from 'react';
 
 interface ErrorBoundaryProps {
   children: ReactNode; // Children components
   fallback?: ReactNode; // Optional fallback UI
 }
 
-interface ErrorBoundaryState {
-  hasError: boolean; // Whether an error has occurred
-  error?: Error; // The error object
-  errorInfo?: ErrorInfo; // Additional error information
-}
+const ErrorBoundary: React.FC<ErrorBoundaryProps> = ({
+  children,
+  fallback,
+}) => {
+  const [hasError, setHasError] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [errorInfo, setErrorInfo] = useState<string | null>(null);
 
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  // Update state to display fallback UI
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
-  }
-
-  // Log the error
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
-    this.setState({ error, errorInfo });
-  }
-
-  render() {
-    const { hasError, error, errorInfo } = this.state;
-    const { children, fallback } = this.props;
-
-    // Display fallback UI if an error occurred
-    if (hasError) {
-      return (
-        fallback || (
-          <div>
-            <h1>Something went wrong.</h1>
-            <p>{error?.message}</p>
-            <pre>{errorInfo?.componentStack}</pre>
-          </div>
-        )
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      setHasError(true);
+      setError(event.error || new Error('An unknown error occurred.'));
+      setErrorInfo(
+        `Error: ${event.error?.message || 'An unknown error occurred.'}`
       );
-    }
+    };
 
-    // Render children if no error
-    return children;
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      setHasError(true);
+      setError(
+        event.reason || new Error('An unhandled promise rejection occurred.')
+      );
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener(
+        'unhandledrejection',
+        handleUnhandledRejection
+      );
+    };
+  }, []);
+
+  if (hasError) {
+    return (
+      fallback || (
+        <div>
+          <h1>Something went wrong.</h1>
+          <p>{error?.message}</p>
+          <pre>{errorInfo}</pre>
+        </div>
+      )
+    );
   }
-}
+
+  return <>{children}</>;
+};
 
 export default ErrorBoundary;
