@@ -307,7 +307,7 @@ function CreateTokenPage({
         const signature = await sendTransaction(transaction, connection, {
           signers: [mint, swapForgeAuthority],
         });
-        console.log('signature', signature);
+        
         const signatureUrl = `https://solscan.io/tx/${signature}${
           network === 'devnet' ? '?cluster=devnet' : ''
         }`;

@@ -1,32 +1,22 @@
-import React, { ReactNode, useState, useEffect } from 'react';
+import React, { ReactNode, useEffect } from 'react';
+import { toast } from 'react-toastify';
 
 interface ErrorBoundaryProps {
-  children: ReactNode; // Children components
-  fallback?: ReactNode; // Optional fallback UI
+  children: ReactNode;
 }
 
-const ErrorBoundary: React.FC<ErrorBoundaryProps> = ({
-  children,
-  fallback,
-}) => {
-  const [hasError, setHasError] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [errorInfo, setErrorInfo] = useState<string | null>(null);
-
+const ErrorBoundary: React.FC<ErrorBoundaryProps> = ({ children }) => {
   useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
-      setHasError(true);
-      setError(event.error || new Error('An unknown error occurred.'));
-      setErrorInfo(
-        `Error: ${event.error?.message || 'An unknown error occurred.'}`
-      );
+    const handleError = (errorEvent: ErrorEvent) => {
+      errorEvent.stopPropagation();
+      toast.error('An unknown error occurred.');
     };
 
-    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      setHasError(true);
-      setError(
-        event.reason || new Error('An unhandled promise rejection occurred.')
-      );
+    const handleUnhandledRejection = (
+      promiseRejectionEvent: PromiseRejectionEvent
+    ) => {
+      promiseRejectionEvent.stopPropagation();
+      toast.error('An unhandled promise rejection occurred.');
     };
 
     window.addEventListener('error', handleError);
@@ -40,18 +30,6 @@ const ErrorBoundary: React.FC<ErrorBoundaryProps> = ({
       );
     };
   }, []);
-
-  if (hasError) {
-    return (
-      fallback || (
-        <div>
-          <h1>Something went wrong.</h1>
-          <p>{error?.message}</p>
-          <pre>{errorInfo}</pre>
-        </div>
-      )
-    );
-  }
 
   return <>{children}</>;
 };

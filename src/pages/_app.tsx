@@ -21,21 +21,12 @@ interface CustomAppProps extends AppProps {
 }
 
 function MyApp({ Component, pageProps, solanaNetwork }: CustomAppProps) {
-  /* const { wallet, connected } = useWallet(); */
   const network = useMemo(() => {
     return solanaNetwork as WalletAdapterNetwork;
   }, [solanaNetwork]);
 
-  /* useEffect(() => {
-    if (connected && wallet) {
-      wallet.adapter.on('error', (error) => {
-        console.error('Wallet adapter error', error);
-      });
-    }
-  }, [connected, wallet]); */
-
   return (
-    <ErrorBoundary fallback={<h1>Something went wrong.</h1>}>
+    <ErrorBoundary>
       <AppWalletProvider network={network}>
         <ToastContainer
           position='top-right'

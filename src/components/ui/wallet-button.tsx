@@ -60,8 +60,13 @@ const WalletButton = () => {
 
     async function getBalance() {
       if (publicKey) {
-        const walletBalance = await connection.getBalance(publicKey);
-        setBalance(walletBalance / LAMPORTS_PER_SOL);
+        try {
+          const balance = await connection.getBalance(publicKey);
+          setBalance(balance / LAMPORTS_PER_SOL);
+        } catch (error) {
+          console.log('error', error);
+          toast.error('Failed to get balance');
+        }
       }
     }
     async function getReferralCode() {

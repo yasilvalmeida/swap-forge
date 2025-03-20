@@ -46,14 +46,10 @@ export default function AppWalletProvider({
   }, []);
 
   const onError = useCallback((walletError: Error) => {
-    try {
-      if (walletError?.message?.includes('User rejected the request')) {
-        toast.error('You rejected the wallet connection. Please try again.');
-      } else {
-        toast.error(walletError?.message || 'An unknown error occurred.');
-      }
-    } catch (error) {
-      console.error('Error in onError callback:', error);
+    if (walletError?.message?.includes('User rejected the request')) {
+      toast.error('You rejected the wallet connection. Please try again.');
+    } else {
+      toast.error(walletError?.message || 'An unknown error occurred.');
     }
   }, []);
 
