@@ -165,10 +165,13 @@ function CreateTokenPage({
       totalFee = Number(sum.toFixed(2));
     }
     const sum = totalFee + CREATE_TOKEN_FEE;
-    const computedTotalFee = Number(sum.toFixed(2));
+    let computedTotalFee = Number(sum.toFixed(2));
+    if (discount > 0) {
+      computedTotalFee = computedTotalFee - computedTotalFee * discount;
+    }
     setValue('tokenFee', computedTotalFee);
     return computedTotalFee;
-  }, [immutable, revokeFreeze, revokeMint, setValue]);
+  }, [discount, immutable, revokeFreeze, revokeMint, setValue]);
 
   const onFileUpload = useCallback(
     async (file?: File) => {
@@ -361,6 +364,7 @@ function CreateTokenPage({
       revokeMint,
       sendTransaction,
       swapForgeSecret,
+      tokenFee,
     ]
   );
 

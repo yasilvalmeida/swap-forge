@@ -168,9 +168,6 @@ function CreateTokenPage({
       totalFee = Number(sum.toFixed(2));
     }
     const sum = totalFee + CREATE_TOKEN_FEE;
-    /* if (discount > 0) {
-      sum = sum - sum * discount;
-    } */
     const computedTotalFee = Number(sum.toFixed(2));
     setValue('tokenFee', computedTotalFee);
     return computedTotalFee;
