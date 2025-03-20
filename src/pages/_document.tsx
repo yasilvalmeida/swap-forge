@@ -1,4 +1,5 @@
 import { Html, Head, Main, NextScript } from 'next/document';
+import Script from 'next/script';
 
 export default function Document() {
   return (
@@ -12,6 +13,20 @@ export default function Document() {
           content='SwapForge: The ultimate Solana dApp for token creation, swapping, and liquidity management.'
         />
         <link rel='icon' href='/favicon.ico' />
+        {/* enable analytics script only for production */}
+        <Script
+          src='https://www.googletagmanager.com/gtag/js?id=G-LGTFS8TY8X'
+          strategy='afterInteractive'
+        />
+        <Script id='google-analytics' strategy='afterInteractive'>
+          {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){window.dataLayer.push(arguments);}
+          gtag('js', new Date());
+
+          gtag('config', 'G-LGTFS8TY8X');
+        `}
+        </Script>
       </Head>
       <body>
         <Main />
