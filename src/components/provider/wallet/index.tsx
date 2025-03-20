@@ -7,7 +7,7 @@ import {
 } from '@solana/wallet-adapter-react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { WalletConnectWalletAdapter } from '@solana/wallet-adapter-walletconnect';
+import { UnsafeBurnerWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { clusterApiUrl } from '@solana/web3.js';
 import { toast } from 'react-toastify';
 import '@solana/wallet-adapter-react-ui/styles.css';
@@ -23,24 +23,28 @@ export default function AppWalletProvider({
 }: AppWalletProviderProps) {
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
   const wallets = useMemo(
-    () => [
-      new WalletConnectWalletAdapter({
-        network:
-          network === WalletAdapterNetwork.Mainnet
-            ? WalletAdapterNetwork.Mainnet
-            : WalletAdapterNetwork.Devnet,
-        options: {
-          relayUrl: 'wss://relay.walletconnect.com',
-          projectId: 'f15b1bda12f769a60d545bcb7b4c40fe',
-          metadata: {
-            name: 'Swapforge App',
-            description: 'A Solana app using WalletConnect',
-            url: 'https://swapforge.app/',
-            icons: ['https://swapforge.app/swap-forge.png'],
+    () => {
+      return [
+        ,
+        /* new WalletConnectWalletAdapter({
+          network:
+            network === WalletAdapterNetwork.Mainnet
+              ? WalletAdapterNetwork.Mainnet
+              : WalletAdapterNetwork.Devnet,
+          options: {
+            relayUrl: 'wss://relay.walletconnect.com',
+            projectId: 'f15b1bda12f769a60d545bcb7b4c40fe',
+            metadata: {
+              name: 'Swapforge App',
+              description: 'A Solana app using WalletConnect',
+              url: 'https://swapforge.app/',
+              icons: ['https://swapforge.app/swap-forge.png'],
+            },
           },
-        },
-      }),
-    ],
+        }), */ new UnsafeBurnerWalletAdapter(),
+      ];
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [network]
   );
 
