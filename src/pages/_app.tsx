@@ -1,7 +1,8 @@
 import App, { AppContext, AppProps } from 'next/app';
 import { ToastContainer } from 'react-toastify';
-import { TOAST_TIMEOUT } from '@/lib/constants';
+import { GA_TRACKING_ID, TOAST_TIMEOUT } from '@/lib/constants';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { GoogleAnalytics } from '@next/third-parties/google';
 import { DefaultSeo } from 'next-seo';
 import SEO from '../seo.config';
 import AppWalletProvider from '@/components/provider/wallet';
@@ -32,6 +33,7 @@ function MyApp({ Component, pageProps, solanaNetwork }: CustomAppProps) {
         theme='light'
       />
       <DefaultSeo {...SEO} />
+      <GoogleAnalytics gaId={GA_TRACKING_ID} />
       <Component {...pageProps} />
     </AppWalletProvider>
   );
