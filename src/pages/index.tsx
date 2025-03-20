@@ -197,7 +197,7 @@ export default function Home() {
             succeed.
           </p>
           <a
-            href='#'
+            href='https://x.com/SwapForgeApp'
             className='rounded-lg bg-yellow-400 px-6 py-3 font-semibold text-gray-900 transition duration-300 hover:bg-yellow-500'
           >
             Join Now
