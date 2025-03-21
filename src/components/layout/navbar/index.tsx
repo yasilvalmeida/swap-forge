@@ -39,14 +39,14 @@ export default function Navbar() {
               Liquidity
             </Link>
             <Link
-              href='/swap'
+              href='/swap-token'
               className={` hover:text-white ${
-                router.pathname === '/swap'
+                router.pathname.includes('/swap-token')
                   ? 'text-white'
                   : 'text-gray-500'
               }`}
             >
-              Swap
+              Swap Token
             </Link>
           </div>
         </div>

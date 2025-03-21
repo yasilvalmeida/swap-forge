@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { formatNumber } from '@/lib/utils';
-import { FilterIcon, FilterX } from 'lucide-react';
+import { ArrowLeftRight, FilterIcon, FilterX } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { Label } from '@/components/ui/label';
@@ -71,25 +71,25 @@ function LiquidityPage() {
         cell: (info) => (
           <div className='flex items-center justify-start gap-2'>
             <div className='relative flex flex-row items-center'>
-              <div className='relative w-6 h-6'>
+              <div className='relative h-6 w-6'>
                 {info?.row?.original?.mintA?.logoURI && (
                   <Image
                     src={info?.row?.original?.mintA?.logoURI}
                     alt={info?.row?.original?.mintA?.name}
                     width={20}
                     height={20}
-                    className='w-full h-full border-2 border-indigo-900 rounded-full shadow-lg'
+                    className='h-full w-full rounded-full border-2 border-indigo-900 shadow-lg'
                   />
                 )}
               </div>
-              <div className='relative w-6 h-6 -ml-2'>
+              <div className='relative -ml-2 h-6 w-6'>
                 {info?.row?.original?.mintB?.logoURI && (
                   <Image
                     src={info?.row?.original?.mintB?.logoURI}
                     alt={info?.row?.original?.mintB?.name}
                     width={20}
                     height={20}
-                    className='w-full h-full border-2 border-indigo-900 rounded-full shadow-lg'
+                    className='h-full w-full rounded-full border-2 border-indigo-900 shadow-lg'
                   />
                 )}
               </div>
@@ -159,17 +159,16 @@ function LiquidityPage() {
         header: () => <span className='text-sm'>Swap</span>,
         cell: (info) => (
           <div className='flex justify-center' vocab={info.row.original.id}>
-            {/* <Button
-              className='px-2 py-1 leading-6 text-white rounded-md shadow-sm cursor-pointer bg-primary hover:bg-primary-hover'
+            <Button
+              className='bg-primary hover:bg-primary-hover cursor-pointer rounded-md px-2 py-1 leading-6 text-white shadow-sm'
               onClick={() => {
                 router.push({
-                  pathname: '/swap',
-                  query: { poolId: info?.row?.original?.id },
+                  pathname: `/swap-token/${info?.row?.original?.id}`,
                 });
               }}
             >
-              <ArrowLeftRight className='w-4 h-4' />
-            </Button> */}
+              <ArrowLeftRight className='h-4 w-4' />
+            </Button>
           </div>
         ),
       }),
@@ -220,14 +219,13 @@ function LiquidityPage() {
   }, [fetchNextPage, hasNextPage, page]);
 
   useEffect(() => {
-    console.log('sort', sort, order);
     queryClient.invalidateQueries({
       queryKey: ['getPoolList', type, sort, order],
     });
   }, [type, sort, order, queryClient]);
 
   return (
-    <div className='min-h-screen text-white bg-gray-900'>
+    <div className='min-h-screen bg-gray-900 text-white'>
       <Header
         isLanding={false}
         title='Liquidity'
@@ -240,9 +238,9 @@ function LiquidityPage() {
         <WalletButton />
       </div>
 
-      <section className='px-4 py-2 bg-gray-800'>
-        <div className='max-w-6xl mx-auto'>
-          <div className='flex flex-row justify-between gap-2 my-2'>
+      <section className='bg-gray-800 px-4 py-2'>
+        <div className='mx-auto max-w-6xl'>
+          <div className='my-2 flex flex-row justify-between gap-2'>
             <div className='flex flex-col gap-2'>
               <Button
                 onClick={(e) => {
@@ -252,14 +250,14 @@ function LiquidityPage() {
                 className='w-32 cursor-pointer'
               >
                 {showFilter ? (
-                  <FilterX className='w-4 h-5' />
+                  <FilterX className='h-5 w-4' />
                 ) : (
-                  <FilterIcon className='w-4 h-4' />
+                  <FilterIcon className='h-4 w-4' />
                 )}
                 Filters
               </Button>
               {showFilter && (
-                <div className='flex flex-row gap-2 p-2 border-purple-900 rounded border-1'>
+                <div className='border-1 flex flex-row gap-2 rounded border-purple-900 p-2'>
                   <div className='flex flex-col gap-2'>
                     <span className='flex flex-row justify-center'>
                       <Label>Type</Label>
@@ -317,16 +315,16 @@ function LiquidityPage() {
                             <SelectItem value='volume24h'>
                               Volume 24h
                             </SelectItem>
-                            <SelectItem value='volume7d'>Volume 7d</SelectItem>
+                            {/* <SelectItem value='volume7d'>Volume 7d</SelectItem>
                             <SelectItem value='volume30d'>
                               Volume 30d
-                            </SelectItem>
+                            </SelectItem> */}
                             <SelectItem value='fee24h'>Fee 24h</SelectItem>
-                            <SelectItem value='fee7d'>Fee 7d</SelectItem>
-                            <SelectItem value='fee30d'>Fee 30d</SelectItem>
+                            {/* <SelectItem value='fee7d'>Fee 7d</SelectItem>
+                            <SelectItem value='fee30d'>Fee 30d</SelectItem> */}
                             <SelectItem value='apr24h'>APR 24h</SelectItem>
-                            <SelectItem value='apr7d'>APR 7d</SelectItem>
-                            <SelectItem value='apr30d'>APR 30d</SelectItem>
+                            {/* <SelectItem value='apr7d'>APR 7d</SelectItem>
+                            <SelectItem value='apr30d'>APR 30d</SelectItem> */}
                           </SelectGroup>
                         </SelectContent>
                       </Select>
@@ -363,12 +361,12 @@ function LiquidityPage() {
                 }}
                 className='cursor-pointer'
               >
-                <PlusIcon className='w-4 h-4' />
+                <PlusIcon className='h-4 w-4' />
                 Create
               </Button> */}
             </span>
           </div>
-          <div className='relative overflow-hidden border border-purple-900 rounded-lg shadow-lg'>
+          <div className='relative overflow-hidden rounded-lg border border-purple-900 shadow-lg'>
             <div className='absolute inset-0 shadow-[0_0_20px_5px_rgba(128,0,128,0.5)]'></div>
             <div className='overflow-auto bg-gray-800 bg-opacity-10 backdrop-blur-md'>
               <table className='min-w-full'>
@@ -379,7 +377,7 @@ function LiquidityPage() {
                         {headerGroup.headers.map((header) => (
                           <th
                             key={header.id}
-                            className={`p-2 font-semibold border border-slate-600`}
+                            className={`border border-slate-600 p-2 font-semibold`}
                           >
                             {header.isPlaceholder ? null : (
                               <div>
@@ -408,7 +406,7 @@ function LiquidityPage() {
                         {row.getVisibleCells().map((cell) => (
                           <td
                             key={cell.id}
-                            className='p-2 border border-slate-700'
+                            className='border border-slate-700 p-2'
                           >
                             {flexRender(
                               cell.column.columnDef.cell,

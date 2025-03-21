@@ -1,0 +1,1 @@
+export const SWAP_TOKEN_FEE = 0.01;

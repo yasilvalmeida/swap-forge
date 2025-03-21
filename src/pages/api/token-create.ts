@@ -1,10 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import {
-  LAMPORTS_PER_SOL,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-} from '@solana/web3.js';
+import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import {
   createInitializeInstruction,
   pack,
@@ -69,14 +64,12 @@ export default async function handler(
     socialDiscord,
     socialInstagram,
     socialFacebook,
-    tokenFee,
     swapForgePublicKey,
     walletPublicKey,
     mintPublicKey,
   } = formData;
 
   const swapForge = new PublicKey(swapForgePublicKey);
-  const wallet = new PublicKey(walletPublicKey);
   const mint = new PublicKey(mintPublicKey);
 
   if (!walletPublicKey) {
@@ -84,13 +77,6 @@ export default async function handler(
   }
   try {
     const connection = getConnection();
-
-    const transferFeesInstruction = SystemProgram.transfer({
-      fromPubkey: wallet,
-      toPubkey: swapForge,
-      lamports:
-        process.env.NODE_ENV === 'production' ? LAMPORTS_PER_SOL * tokenFee : 0,
-    });
 
     // Store and retrieve uri of image
     const imageUrl = await uploadMediaToCloudinary(tokenLogo);
@@ -179,7 +165,6 @@ export default async function handler(
 
     /* Start Transfer fee from Wallet to Swap Forge Wallet */
     const transactions = new Transaction().add(
-      transferFeesInstruction,
       createAccountInstruction,
       initializeMetadataPointerInstruction,
       initializeMintInstruction,

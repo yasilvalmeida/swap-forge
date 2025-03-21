@@ -1,8 +1,6 @@
-import App, { AppContext, AppProps } from 'next/app';
-import { useMemo } from 'react';
+import { AppProps } from 'next/app';
 import { ToastContainer } from 'react-toastify';
 import { GA_TRACKING_ID, TOAST_TIMEOUT } from '@/lib/constants';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { DefaultSeo } from 'next-seo';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -13,24 +11,15 @@ import dotenv from 'dotenv';
 
 import '@/style/globals.css';
 import 'react-toastify/dist/ReactToastify.css';
-/* import { useWallet } from '@solana/wallet-adapter-react'; */
 
 dotenv.config();
 
-interface CustomAppProps extends AppProps {
-  solanaNetwork: string;
-}
-
-function MyApp({ Component, pageProps, solanaNetwork }: CustomAppProps) {
+function MyApp({ Component, pageProps }: AppProps) {
   const queryClient = new QueryClient();
-
-  const network = useMemo(() => {
-    return solanaNetwork as WalletAdapterNetwork;
-  }, [solanaNetwork]);
 
   return (
     <ErrorBoundary>
-      <AppWalletProvider network={network}>
+      <AppWalletProvider>
         <ToastContainer
           position='top-right'
           autoClose={TOAST_TIMEOUT}
@@ -53,12 +42,12 @@ function MyApp({ Component, pageProps, solanaNetwork }: CustomAppProps) {
   );
 }
 
-MyApp.getInitialProps = async (appContext: AppContext) => {
+/* MyApp.getInitialProps = async (appContext: AppContext) => {
   const appProps = await App.getInitialProps(appContext);
   return {
     ...appProps,
     solanaNetwork: process.env.SOLANA_NETWORK || 'devnet',
   };
-};
+}; */
 
 export default MyApp;

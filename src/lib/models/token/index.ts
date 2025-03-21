@@ -35,7 +35,6 @@ export type CreateTokenRequestDto = {
   socialDiscord: string;
   socialInstagram: string;
   socialFacebook: string;
-  tokenFee: number;
   swapForgePublicKey: string;
   walletPublicKey: string;
   mintPublicKey: string;
@@ -47,6 +46,7 @@ export type CreateTokenResponseDto = {
 
 export type AddSupplierRequestDto = {
   tokenSupply: number;
+  tokenFee: number;
   revokeMint: boolean;
   revokeFreeze: boolean;
   immutable: boolean;

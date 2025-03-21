@@ -21,7 +21,12 @@ const getPoolList = async (props?: FetchPoolParams) => {
         sort,
         order,
       });
-      return { ...pools };
+      return {
+        ...pools,
+        data: pools.data?.filter(
+          (pool) => pool.mintA.name.length > 0 && pool.mintB.name.length > 0
+        ),
+      };
     } else {
       const pools = await raydium.api.getPoolList({
         page: 1,
@@ -30,11 +35,31 @@ const getPoolList = async (props?: FetchPoolParams) => {
         sort: 'liquidity',
         order: 'desc',
       });
-      return { ...pools, page: 1 };
+      return { ...pools };
     }
   } catch (error) {
     toast.error(`Error fetching pool list: ${JSON.stringify(error)}`);
   }
 };
 
-export { raydium, getPoolList };
+const getPoolById = async (ids: string) => {
+  try {
+    const pools = await raydium.api.fetchPoolById({
+      ids,
+    });
+    return pools;
+  } catch (error) {
+    toast.error(`Error fetching pool by id: ${JSON.stringify(error)}`);
+  }
+};
+
+const getTokenList = async () => {
+  try {
+    const pools = await raydium.api.getTokenList();
+    return pools;
+  } catch (error) {
+    toast.error(`Error fetching token list: ${JSON.stringify(error)}`);
+  }
+};
+
+export { raydium, getPoolList, getPoolById, getTokenList };

@@ -19,21 +19,16 @@ import { toast } from 'react-toastify';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 interface AppWalletProviderProps {
-  network: WalletAdapterNetwork;
   children: React.ReactNode;
 }
 
 export default function AppWalletProvider({
-  network,
   children,
 }: AppWalletProviderProps) {
-  const endpoint = useMemo(() => {
-    if (!network) {
-      toast.error('Network not found. Defaulting to Devnet.');
-      return clusterApiUrl(WalletAdapterNetwork.Devnet);
-    }
-    return clusterApiUrl(network);
-  }, [network]);
+  const endpoint = useMemo(
+    () => clusterApiUrl(WalletAdapterNetwork.Devnet),
+    []
+  );
 
   const wallets = useMemo(() => {
     return [
@@ -46,6 +41,7 @@ export default function AppWalletProvider({
   }, []);
 
   const onError = useCallback((walletError: Error) => {
+    console.log('walletError', walletError);
     if (walletError?.message?.includes('User rejected the request')) {
       toast.error('You rejected the wallet connection. Please try again.');
     } else {
@@ -66,21 +62,3 @@ export default function AppWalletProvider({
     </ConnectionProvider>
   );
 }
-
-/* new UnsafeBurnerWalletAdapter(), */
-/* new WalletConnectWalletAdapter({
-    network:
-      network === WalletAdapterNetwork.Mainnet
-        ? WalletAdapterNetwork.Mainnet
-        : WalletAdapterNetwork.Devnet,
-    options: {
-      relayUrl: 'wss://relay.walletconnect.com',
-      projectId: 'f15b1bda12f769a60d545bcb7b4c40fe',
-      metadata: {
-        name: 'Swapforge App',
-        description: 'A Solana app using WalletConnect',
-        url: 'https://swapforge.app/',
-        icons: ['https://swapforge.app/swap-forge.png'],
-      },
-    },
-  }), */

@@ -29,10 +29,10 @@ import {
   REVOKE_MINT_FEE,
   TOKEN_NAME_MAX_CHARS,
   TOKEN_SYMBOL_MAX_CHARS,
-} from '@/lib/constants/token';
+} from '@/lib/constants/create-token';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { TokenFormData } from '@/lib/validation/token';
+import { CreateTokenFormData } from '@/lib/validation/create-token';
 import { DragAndDrop } from '@/components/ui/drag-and-drop';
 import { TagsInput } from '@/components/ui/tags-input';
 import {
@@ -70,6 +70,7 @@ import { GetServerSideProps } from 'next';
 import FrequentAnswersAndQuestions from '@/components/layout/frequent-answer-question';
 import dotenv from 'dotenv';
 import bs58 from 'bs58';
+import { WalletSendTransactionError } from '@solana/wallet-adapter-base';
 
 dotenv.config();
 
@@ -87,7 +88,7 @@ function CreateTokenPage({
   network,
 }: SSRCreateTokenPageProps) {
   const [schema, setSchema] = useState<
-    typeof import('@/lib/validation/token').tokenFormSchema | null
+    typeof import('@/lib/validation/create-token').createTokenFormSchema | null
   >(null);
 
   const {
@@ -101,7 +102,7 @@ function CreateTokenPage({
     clearErrors,
     control,
     formState: { errors },
-  } = useForm<TokenFormData>({
+  } = useForm<CreateTokenFormData>({
     resolver: schema ? zodResolver(schema) : undefined,
     defaultValues: {
       tokenName: '',
@@ -265,7 +266,7 @@ function CreateTokenPage({
   }, [getValues, reset]);
 
   const onSubmit = useCallback(
-    async (tokenFormData: TokenFormData) => {
+    async (createTokenFormData: CreateTokenFormData) => {
       try {
         setErrorMessage('');
         if (!connected || !publicKey) {
@@ -283,8 +284,6 @@ function CreateTokenPage({
           bs58.decode(swapForgeSecret)
         );
 
-        updateWallet(publicKey.toBase58());
-
         setLoading(true);
 
         const mint = Keypair.generate();
@@ -293,7 +292,7 @@ function CreateTokenPage({
         const createTokenResponse = await axios.post<CreateTokenResponseDto>(
           '/api/token-create',
           {
-            ...tokenFormData,
+            ...createTokenFormData,
             swapForgePublicKey: swapForgeAuthority.publicKey,
             walletPublicKey: publicKey,
             mintPublicKey: mint.publicKey,
@@ -303,11 +302,11 @@ function CreateTokenPage({
         const { serializedTransaction } = createTokenResponse.data;
 
         const transaction = deserializeTransaction(serializedTransaction);
-        
+
         const signature = await sendTransaction(transaction, connection, {
           signers: [mint, swapForgeAuthority],
         });
-        
+        console.log('signature', signature);
         const signatureUrl = `https://solscan.io/tx/${signature}${
           network === 'devnet' ? '?cluster=devnet' : ''
         }`;
@@ -316,7 +315,8 @@ function CreateTokenPage({
         const addSupplierResponse = await axios.post<AddSupplierResponseDto>(
           '/api/token-add-supplier',
           {
-            tokenSupply: removeFormatting(tokenFormData.tokenSupply),
+            tokenSupply: removeFormatting(createTokenFormData.tokenSupply),
+            tokenFee,
             revokeMint,
             revokeFreeze,
             immutable,
@@ -328,6 +328,7 @@ function CreateTokenPage({
         const message = addSupplierResponse.data?.message;
         setLoading(false);
         if (!message.includes('Failed')) {
+          updateWallet(publicKey.toBase58());
           setOpen(true);
           reset();
           toast.success('Your token has been created!');
@@ -335,7 +336,13 @@ function CreateTokenPage({
           toast.error(message);
         }
       } catch (error) {
-        if (error instanceof AxiosError) {
+        if (error instanceof WalletSendTransactionError) {
+          if (error.message.includes('User rejected the request')) {
+            toast.error('You rejected the transaction. Please try again.');
+          } else {
+            toast.error(error.message);
+          }
+        } else if (error instanceof AxiosError) {
           const axiosError = error as AxiosError;
           const data = axiosError.response?.data;
           toast.error((data as ErrorResponseDto)?.error);
@@ -352,6 +359,7 @@ function CreateTokenPage({
       immutable,
       network,
       publicKey,
+      referralCode,
       reset,
       revokeFreeze,
       revokeMint,
@@ -362,8 +370,8 @@ function CreateTokenPage({
   );
 
   useEffect(() => {
-    import('@/lib/validation/token').then((module) => {
-      setSchema(module.tokenFormSchema);
+    import('@/lib/validation/create-token').then((module) => {
+      setSchema(module.createTokenFormSchema);
     });
   }, []);
 

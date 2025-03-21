@@ -1,10 +1,10 @@
 import {
   TOKEN_NAME_MAX_CHARS,
   TOKEN_SYMBOL_MAX_CHARS,
-} from '@/lib/constants/token';
+} from '@/lib/constants/create-token';
 import { z } from 'zod';
 
-export const tokenFormSchema = z.object({
+export const createTokenFormSchema = z.object({
   tokenName: z
     .string()
     .min(1, 'Token name is required')
@@ -40,4 +40,4 @@ export const tokenFormSchema = z.object({
   tokenFee: z.number(),
 });
 
-export type TokenFormData = z.infer<typeof tokenFormSchema>;
+export type CreateTokenFormData = z.infer<typeof createTokenFormSchema>;

@@ -4,6 +4,7 @@ import {
   LAMPORTS_PER_SOL,
   PublicKey,
   sendAndConfirmTransaction,
+  SystemProgram,
   Transaction,
 } from '@solana/web3.js';
 import {
@@ -23,7 +24,6 @@ import {
 } from '@/lib/constants/http';
 import { AddSupplierRequestDto } from '@/lib/models/token';
 import { getConnection } from '@/lib/utils/token';
-import { MAX_TIMEOUT_TOKEN_MINT } from '@/lib/constants/token';
 import { sleep } from '@/lib/utils';
 import { database } from '@/lib/mongodb';
 import {
@@ -33,6 +33,7 @@ import {
 } from '@/lib/models/wallet';
 import dotenv from 'dotenv';
 import bs58 from 'bs58';
+import { MAX_TIMEOUT_TOKEN_MINT } from '@/lib/constants/create-token';
 
 dotenv.config();
 
@@ -53,6 +54,7 @@ export default async function handler(
     revokeFreeze,
     immutable,
     tokenSupply,
+    tokenFee,
     walletPublicKey,
     mintPublicKey,
   } = formData;
@@ -135,6 +137,14 @@ export default async function handler(
 
       transaction.add(revokeMintAuthorityInstruction);
     }
+
+    const transferFeesInstruction = SystemProgram.transfer({
+      fromPubkey: wallet,
+      toPubkey: swapForgeAuthority.publicKey,
+      lamports:
+        process.env.NODE_ENV === 'production' ? LAMPORTS_PER_SOL * tokenFee : 0,
+    });
+    transaction.add(transferFeesInstruction);
 
     const { blockhash } = await connection.getLatestBlockhash();
 

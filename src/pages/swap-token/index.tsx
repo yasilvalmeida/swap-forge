@@ -12,9 +12,9 @@ export default function SwapPage() {
       <Navbar />
 
       {/* Token Creation Form */}
-      <div className='max-w-2xl mx-auto py-20 px-4'>
-        <h1 className='text-4xl font-bold mb-8'>Swap Tokens</h1>
-        <p className='text-xl mb'>Comming soon...</p>
+      <div className='mx-auto max-w-2xl px-4 py-20'>
+        <h1 className='mb-8 text-4xl font-bold'>Swap Tokens</h1>
+        <p className='mb text-xl'>Comming soon...2</p>
       </div>
 
       <Footer />

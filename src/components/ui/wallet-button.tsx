@@ -62,6 +62,7 @@ const WalletButton = () => {
       if (publicKey) {
         try {
           const balance = await connection.getBalance(publicKey);
+          console.log('balance', balance);
           setBalance(balance / LAMPORTS_PER_SOL);
         } catch (error) {
           console.log('error', error);

@@ -1,4 +1,7 @@
-import { MAX_LOGO_HEIGHT, MAX_LOGO_WIDTH } from '@/lib/constants/token/index';
+import {
+  MAX_LOGO_HEIGHT,
+  MAX_LOGO_WIDTH,
+} from '@/lib/constants/create-token/index';
 import { NextApiRequest, NextApiResponse } from 'next';
 import {
   ResizeImageRequestDto,
@@ -32,7 +35,7 @@ export default async function handler(
           fit: 'cover',
         })
         .toBuffer();
-      
+
       const base64Image = resizedImage.toString('base64');
       const resizedTokenLogoBase64 = `data:image/png;base64,${base64Image}`;
 
