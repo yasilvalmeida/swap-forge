@@ -26,7 +26,7 @@ export default function AppWalletProvider({
   children,
 }: AppWalletProviderProps) {
   const endpoint = useMemo(
-    () => clusterApiUrl(WalletAdapterNetwork.Devnet),
+    () => clusterApiUrl(WalletAdapterNetwork.Mainnet),
     []
   );
 

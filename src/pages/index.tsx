@@ -43,7 +43,7 @@ export default function Home() {
 
           {/* Feature 3 */}
           <div className='flex h-52 flex-col justify-between rounded-lg bg-gray-800 p-6 shadow-lg'>
-            <h3 className='mb-4 text-2xl font-semibold'>Token Swapping</h3>
+            <h3 className='mb-4 text-2xl font-semibold'>Swap Token</h3>
             <p className='text-gray-300'>
               Swap tokens instantly with high-speed transactions, low fees, and
               best prices.
@@ -52,7 +52,7 @@ export default function Home() {
               href='/swap-token'
               className='w-auto rounded-lg bg-yellow-400 px-6 py-3 text-center font-semibold text-gray-900 transition duration-300 hover:bg-yellow-500'
             >
-              Liquidity Pools
+              Swap Token
             </Link>
           </div>
         </div>

@@ -24,6 +24,7 @@ export type CreateTokenRequestDto = {
   tokenDecimals: number;
   tokenLogo: string;
   tokenDescription: string;
+  tokenSupply: number;
   tags: string[];
   customCreatorInfo: boolean;
   creatorName: string;
@@ -35,13 +36,15 @@ export type CreateTokenRequestDto = {
   socialDiscord: string;
   socialInstagram: string;
   socialFacebook: string;
-  swapForgePublicKey: string;
+  revokeMint: boolean;
+  revokeFreeze: boolean;
+  immutable: boolean;
   walletPublicKey: string;
-  mintPublicKey: string;
 };
 
 export type CreateTokenResponseDto = {
-  serializedTransaction: Buffer<ArrayBufferLike>;
+  signature: string;
+  mintPublicKey: string;
 };
 
 export type AddSupplierRequestDto = {
@@ -50,7 +53,6 @@ export type AddSupplierRequestDto = {
   revokeMint: boolean;
   revokeFreeze: boolean;
   immutable: boolean;
-  swapForgePublicKey: string;
   walletPublicKey: string;
   mintPublicKey: string;
 };

@@ -51,18 +51,16 @@ import useConnection from '@/components/hook/token';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogOverlay,
   DialogPortal,
   DialogTitle,
 } from '@radix-ui/react-dialog';
 import Spinner from '@/components/ui/spinner';
 import { DialogFooter, DialogHeader } from '@/components/ui/dialog';
-import { Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { deserializeTransaction } from '@/lib/utils/token';
 import {
   CreateTokenResponseDto,
-  AddSupplierResponseDto,
   ResizeImageResponseDto,
 } from '@/lib/models/token';
 import { GetServerSideProps } from 'next';
@@ -70,9 +68,9 @@ import { WalletSendTransactionError } from '@solana/wallet-adapter-base';
 import { database } from '@/lib/mongodb';
 import { WALLET_COLLECTION, WalletDto } from '@/lib/models/wallet';
 import { updateWallet } from '@/lib/utils/wallet';
+import { PaymentResponseDto } from '@/lib/models/payment';
 import FrequentAnswersAndQuestions from '@/components/layout/frequent-answer-question';
 import dotenv from 'dotenv';
-import bs58 from 'bs58';
 
 dotenv.config();
 
@@ -86,11 +84,7 @@ interface SSRCreateTokenPageProps {
   referralCode: string;
 }
 
-function CreateTokenPage({
-  swapForgeSecret,
-  network,
-  referralCode,
-}: SSRCreateTokenPageProps) {
+function CreateTokenPage({ network, referralCode }: SSRCreateTokenPageProps) {
   const [schema, setSchema] = useState<
     typeof import('@/lib/validation/create-token').createTokenFormSchema | null
   >(null);
@@ -147,10 +141,14 @@ function CreateTokenPage({
   const createSocial = watch('createSocial');
 
   const [loading, setLoading] = useState<boolean>(false);
+  const [title, setTitle] = useState<string>(
+    'Creating your token, please be patient!'
+  );
+  const [paymentSignature, setPaymentSignature] = useState<string>();
+  const [createSignature, setCreateSignature] = useState<string>();
   const [open, setOpen] = useState<boolean>(false);
   const [tokenImageHover, setTokenImageHover] = useState<boolean>(false);
   const [token, setToken] = useState<string>('');
-  const [solScanUrl, setSolscanUrl] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
   const computedTotalFee = useMemo(() => {
@@ -280,60 +278,56 @@ function CreateTokenPage({
           toast.warn('Insufficient Balance!');
         }
 
-        const swapForgeAuthority = Keypair.fromSecretKey(
-          bs58.decode(swapForgeSecret)
+        const paymentResponse = await axios.post<PaymentResponseDto>(
+          '/api/payment',
+          {
+            walletPublicKey: publicKey,
+            tokenFee,
+          }
         );
+        const { serializedTransaction } = paymentResponse.data;
+
+        const transaction = deserializeTransaction(serializedTransaction);
+
+        let signature = await sendTransaction(transaction, connection, {
+          signers: [],
+        });
+
+        if (!signature) {
+          toast.error('Transfer failed!');
+          throw Error();
+        }
+        let signatureUrl = `https://solscan.io/tx/${signature}${
+          network === 'devnet' ? '?cluster=devnet' : ''
+        }`;
+        setPaymentSignature(signatureUrl);
 
         setLoading(true);
-
-        const mint = Keypair.generate();
-        setToken(mint.publicKey.toBase58());
+        setOpen(true);
 
         const createTokenResponse = await axios.post<CreateTokenResponseDto>(
           '/api/token-create',
           {
             ...createTokenFormData,
-            swapForgePublicKey: swapForgeAuthority.publicKey,
-            walletPublicKey: publicKey,
-            mintPublicKey: mint.publicKey,
-          }
-        );
-
-        const { serializedTransaction } = createTokenResponse.data;
-
-        const transaction = deserializeTransaction(serializedTransaction);
-
-        const signature = await sendTransaction(transaction, connection, {
-          signers: [mint, swapForgeAuthority],
-        });
-        console.log('signature', signature);
-        const signatureUrl = `https://solscan.io/tx/${signature}${
-          network === 'devnet' ? '?cluster=devnet' : ''
-        }`;
-        setSolscanUrl(signatureUrl);
-
-        const addSupplierResponse = await axios.post<AddSupplierResponseDto>(
-          '/api/token-add-supplier',
-          {
             tokenSupply: removeFormatting(createTokenFormData.tokenSupply),
-            tokenFee,
-            revokeMint,
-            revokeFreeze,
-            immutable,
-            swapForgePublicKey: swapForgeAuthority.publicKey,
             walletPublicKey: publicKey,
-            mintPublicKey: mint.publicKey,
           }
         );
-        const message = addSupplierResponse.data?.message;
+        signature = createTokenResponse.data.signature;
+        const { mintPublicKey } = createTokenResponse.data;
+        setToken(mintPublicKey);
         setLoading(false);
-        if (!message.includes('Failed')) {
+        if (signature) {
+          signatureUrl = `https://solscan.io/tx/${signature}${
+            network === 'devnet' ? '?cluster=devnet' : ''
+          }`;
+          setCreateSignature(signatureUrl);
           updateWallet(publicKey.toBase58(), referralCode);
-          setOpen(true);
           reset();
           toast.success('Your token has been created!');
+          setTitle('Successful');
         } else {
-          toast.error(message);
+          toast.error('Failed to create token, try again!');
         }
       } catch (error) {
         if (error instanceof WalletSendTransactionError) {
@@ -356,15 +350,10 @@ function CreateTokenPage({
     [
       connected,
       connection,
-      immutable,
       network,
       publicKey,
-      referralCode,
       reset,
-      revokeFreeze,
-      revokeMint,
       sendTransaction,
-      swapForgeSecret,
       tokenFee,
     ]
   );
@@ -388,60 +377,83 @@ function CreateTokenPage({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogPortal>
           <DialogOverlay className='fixed inset-0 bg-black/50' />
-          <DialogContent className='fixed left-[50%] top-[50%] w-1/2 translate-x-[-50%] translate-y-[-50%] rounded-lg bg-gray-900 p-6 shadow-lg'>
+          <DialogContent
+            onInteractOutside={(e) => {
+              e.preventDefault();
+            }}
+            className='fixed left-[50%] top-[50%] w-1/2 translate-x-[-50%] translate-y-[-50%] rounded-lg bg-gray-900 p-6 shadow-lg'
+          >
             <DialogHeader>
-              <DialogTitle className='text-gray-300'>Token Created</DialogTitle>
-              <DialogDescription className='text-gray-300'>
-                Your token has been created successful!
-              </DialogDescription>
+              <DialogTitle className='text-gray-300'>{title}</DialogTitle>
             </DialogHeader>
-            <div className='my-8 flex items-center space-x-2'>
-              <div className='grid flex-1 gap-2'>
-                <Label htmlFor='token' className='sr-only'>
-                  Token
-                </Label>
-                <Input id='token' defaultValue={token} readOnly />
-              </div>
+            {token && (
+              <div className='my-8 flex items-center space-x-2'>
+                <div className='grid flex-1 gap-2'>
+                  <Label htmlFor='token' className='sr-only'>
+                    Token
+                  </Label>
+                  <Input id='token' defaultValue={token} readOnly />
+                </div>
 
-              <Button
-                onClick={(e) => {
-                  e.preventDefault();
-                  copyToClipboard(token);
-                  toast.success('Token copied!');
-                }}
-                size='sm'
-                className='cursor-pointer px-3'
-              >
-                <span className='sr-only'>Copy</span>
-                <Copy />
-              </Button>
-            </div>
+                <Button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    copyToClipboard(token);
+                    toast.success('Token copied!');
+                  }}
+                  size='sm'
+                  className='cursor-pointer px-3'
+                >
+                  <span className='sr-only'>Copy</span>
+                  <Copy />
+                </Button>
+              </div>
+            )}
 
             <div className='flex flex-col gap-4'>
-              <div className='flex justify-center'>
-                <Link
-                  href={solScanUrl}
-                  target='_blank'
-                  className='cursor-pointer'
-                >
-                  <span className='text-xs flex items-center gap-1 text-yellow-400 underline'>
-                    <LinkIcon className='h-4' /> View signature on solscan
-                  </span>
-                </Link>
-              </div>
+              {paymentSignature && (
+                <div className='flex justify-center'>
+                  <Link
+                    href={paymentSignature || ''}
+                    target='_blank'
+                    className='cursor-pointer'
+                  >
+                    <span className='text-xs flex items-center gap-1 text-yellow-400 underline'>
+                      <LinkIcon className='h-4' /> View payment signature on
+                      Solscan
+                    </span>
+                  </Link>
+                </div>
+              )}
+              {createSignature && (
+                <div className='flex justify-center'>
+                  <Link
+                    href={createSignature || ''}
+                    target='_blank'
+                    className='cursor-pointer'
+                  >
+                    <span className='text-xs flex items-center gap-1 text-yellow-400 underline'>
+                      <LinkIcon className='h-4' /> View create token signature
+                      on Solscan
+                    </span>
+                  </Link>
+                </div>
+              )}
 
-              <div className='flex justify-center'>
-                <Link
-                  href={RAYDIUM_LIQUIDITY_URL}
-                  target='_blank'
-                  className='cursor-pointer'
-                >
-                  <span className='text-xs flex items-center gap-1 text-yellow-400 underline'>
-                    <AlignVerticalDistributeEnd className='h-4' /> Create
-                    Liquidity Pool on Raydium
-                  </span>
-                </Link>
-              </div>
+              {token && (
+                <div className='flex justify-center'>
+                  <Link
+                    href={RAYDIUM_LIQUIDITY_URL}
+                    target='_blank'
+                    className='cursor-pointer'
+                  >
+                    <span className='text-xs flex items-center gap-1 text-yellow-400 underline'>
+                      <AlignVerticalDistributeEnd className='h-4' /> Create
+                      Liquidity Pool on Raydium
+                    </span>
+                  </Link>
+                </div>
+              )}
             </div>
 
             <DialogFooter>
