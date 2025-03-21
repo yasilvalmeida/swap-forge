@@ -300,6 +300,9 @@ function CreateTokenPage({ endpoint }: SSRCreateTokenPageProps) {
         let signatureUrl = `https://solscan.io/tx/${signature}`;
         setPaymentSignature(signatureUrl);
 
+        setTitle('Creating your token, please be patient!');
+        setCreateSignature('');
+        setToken('');
         setLoading(true);
         setOpen(true);
 

@@ -218,7 +218,13 @@ export default async function handler(
       TOKEN_2022_PROGRAM_ID
     );
 
-    const amount = tokenSupply * LAMPORTS_PER_SOL;
+    let amount = 0;
+
+    if (tokenDecimals === 9) {
+      amount = tokenSupply * LAMPORTS_PER_SOL;
+    } else {
+      amount = (tokenSupply * LAMPORTS_PER_SOL) / 1000;
+    }
 
     await sleep(MAX_TIMEOUT_TOKEN_MINT);
 
