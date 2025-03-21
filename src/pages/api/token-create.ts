@@ -220,10 +220,10 @@ export default async function handler(
 
     let amount = 0;
 
-    if (tokenDecimals === 9) {
-      amount = tokenSupply * LAMPORTS_PER_SOL;
-    } else {
+    if (Number(tokenDecimals) === 6) {
       amount = (tokenSupply * LAMPORTS_PER_SOL) / 1000;
+    } else {
+      amount = tokenSupply * LAMPORTS_PER_SOL;
     }
 
     await sleep(MAX_TIMEOUT_TOKEN_MINT);
