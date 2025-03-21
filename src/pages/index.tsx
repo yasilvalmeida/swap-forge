@@ -33,12 +33,12 @@ export default function Home() {
             <p className='text-gray-300'>
               Create and manage liquidity pools for seamless token trading.
             </p>
-            <a
-              href='#'
+            <Link
+              href='/liquidity'
               className='w-auto px-6 py-3 font-semibold text-center text-gray-900 transition duration-300 bg-yellow-400 rounded-lg hover:bg-yellow-500'
             >
-              Comming soon
-            </a>
+              Liquidity Pools
+            </Link>
           </div>
 
           {/* Feature 3 */}

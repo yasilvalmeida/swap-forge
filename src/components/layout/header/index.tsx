@@ -6,23 +6,23 @@ interface IProp {
 
 const Header = ({ isLanding, title, subtitle }: IProp) => {
   return (
-    <section className='text-center py-20 bg-gradient-to-r from-purple-800 to-indigo-900'>
+    <section className='py-20 text-center bg-gradient-to-r from-purple-800 to-indigo-900'>
       {title ? (
-        <h1 className='text-4xl font-bold mb-4'>Create Your Token</h1>
+        <h1 className='mb-4 text-4xl font-bold'>{title}</h1>
       ) : (
-        <h1 className='text-5xl font-bold mb-4'>
+        <h1 className='mb-4 text-5xl font-bold'>
           Welcome to <span className='text-yellow-400'>SwapForge</span>
         </h1>
       )}
       {isLanding ? (
         <>
-          <p className='text-xl mb-8'>
+          <p className='mb-8 text-xl'>
             The ultimate Solana dApp for token creation, swapping, and liquidity
             management.
           </p>
           <a
             href='#features'
-            className='bg-yellow-400 text-gray-900 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-500 transition duration-300'
+            className='px-6 py-3 font-semibold text-gray-900 transition duration-300 bg-yellow-400 rounded-lg hover:bg-yellow-500'
           >
             Explore Features
           </a>

@@ -10,11 +10,18 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const formatNumber = (number: string) => {
-  // Remove all non-numeric characters
-  const numericValue = number.replace(/\D/g, '');
-
-  // Add commas every 3 digits
-  return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  const [integer, decimal] = number.split('.');
+  if (!decimal) {
+    const numericValue = integer.replace(/\D/g, '');
+    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  } else {
+    const decimalFormatted = decimal.substring(0, 2);
+    const numericValue = integer.replace(/\D/g, '');
+    return `${numericValue.replace(
+      /\B(?=(\d{3})+(?!\d))/g,
+      ' '
+    )}.${decimalFormatted}`;
+  }
 };
 
 export const removeFormatting = (number: string) => {
@@ -53,4 +60,9 @@ export const copyToClipboard = (text: string) => {
 
 export const sleep = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
+};
+
+export const range = (start: number, end: number) => {
+  const length = end - start + 1;
+  return Array.from({ length }, (_, idx) => idx + start);
 };

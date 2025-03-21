@@ -5,6 +5,7 @@ import { GA_TRACKING_ID, TOAST_TIMEOUT } from '@/lib/constants';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { DefaultSeo } from 'next-seo';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import SEO from '../seo.config';
 import AppWalletProvider from '@/components/provider/wallet';
 import ErrorBoundary from '@/components/layout/error-bondary';
@@ -21,6 +22,8 @@ interface CustomAppProps extends AppProps {
 }
 
 function MyApp({ Component, pageProps, solanaNetwork }: CustomAppProps) {
+  const queryClient = new QueryClient();
+
   const network = useMemo(() => {
     return solanaNetwork as WalletAdapterNetwork;
   }, [solanaNetwork]);
@@ -42,7 +45,9 @@ function MyApp({ Component, pageProps, solanaNetwork }: CustomAppProps) {
         />
         <DefaultSeo {...SEO} />
         <GoogleAnalytics gaId={GA_TRACKING_ID} />
-        <Component {...pageProps} />
+        <QueryClientProvider client={queryClient}>
+          <Component {...pageProps} />
+        </QueryClientProvider>
       </AppWalletProvider>
     </ErrorBoundary>
   );
