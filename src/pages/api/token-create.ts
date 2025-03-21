@@ -201,11 +201,10 @@ export default async function handler(
     transactions.recentBlockhash = blockhash;
     transactions.feePayer = swapForgeAuthority.publicKey;
 
-    let signature = await sendAndConfirmTransaction(
-      connection,
-      transactions,
-      [swapForgeAuthority, mint]
-    );
+    let signature = await sendAndConfirmTransaction(connection, transactions, [
+      swapForgeAuthority,
+      mint,
+    ]);
 
     await sleep(1000);
 
@@ -219,7 +218,7 @@ export default async function handler(
       TOKEN_2022_PROGRAM_ID
     );
 
-    const amount = (tokenSupply * LAMPORTS_PER_SOL) / 1000;
+    const amount = tokenSupply * LAMPORTS_PER_SOL;
 
     await sleep(MAX_TIMEOUT_TOKEN_MINT);
 
