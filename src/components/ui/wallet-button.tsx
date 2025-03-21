@@ -61,6 +61,7 @@ const WalletButton = () => {
     async function getBalance() {
       if (publicKey) {
         try {
+          console.log('connection', connection);
           const balance = await connection.getBalance(publicKey);
           console.log('balance', balance);
           setBalance(balance / LAMPORTS_PER_SOL);
