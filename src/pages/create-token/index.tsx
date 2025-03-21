@@ -353,20 +353,7 @@ function CreateTokenPage({
         setLoading(false);
       }
     },
-    [
-      connected,
-      connection,
-      immutable,
-      network,
-      publicKey,
-      referralCode,
-      reset,
-      revokeFreeze,
-      revokeMint,
-      sendTransaction,
-      swapForgeSecret,
-      tokenFee,
-    ]
+    [connected, connection, immutable, network, publicKey, reset, revokeFreeze, revokeMint, sendTransaction, swapForgeSecret, tokenFee]
   );
 
   useEffect(() => {
