@@ -1,16 +1,15 @@
-import { Connection, clusterApiUrl, Cluster } from '@solana/web3.js';
+import { Connection } from '@solana/web3.js';
 import { useMemo } from 'react';
+import dotenv from 'dotenv';
 
-interface IProps {
-  network: string;
-}
+dotenv.config();
 
-const useConnection = ({ network }: IProps) => {
+const useConnection = (endpoint: string) => {
   const connection = useMemo(() => {
-    return new Connection(clusterApiUrl(network as Cluster), 'confirmed');
-  }, [network]);
-  
-  return { connection, network };
+    return new Connection(endpoint, 'confirmed');
+  }, [endpoint]);
+
+  return { connection };
 };
 
 export default useConnection;

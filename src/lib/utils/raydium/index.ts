@@ -7,7 +7,9 @@ import {
 import { toast } from 'react-toastify';
 
 const raydium = await Raydium.load({
-  connection: new Connection('https://api.mainnet-beta.solana.com'),
+  connection: new Connection(
+    'https://damp-muddy-isle.solana-mainnet.quiknode.pro/6f3f143081a2ab0946f82437bb7a3b050e7f36c1/'
+  ),
 });
 
 const getPoolList = async (props?: FetchPoolParams) => {

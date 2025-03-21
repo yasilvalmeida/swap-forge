@@ -77,10 +77,10 @@ const Header = dynamic(() => import('@/components/layout/header'), {});
 const Footer = dynamic(() => import('@/components/layout/footer'), {});
 
 interface SSRCreateTokenPageProps {
-  network: string;
+  endpoint: string;
 }
 
-function CreateTokenPage({ network }: SSRCreateTokenPageProps) {
+function CreateTokenPage({ endpoint }: SSRCreateTokenPageProps) {
   const [schema, setSchema] = useState<
     typeof import('@/lib/validation/create-token').createTokenFormSchema | null
   >(null);
@@ -124,7 +124,7 @@ function CreateTokenPage({ network }: SSRCreateTokenPageProps) {
   });
 
   const { connected, publicKey, sendTransaction } = useWallet();
-  const { connection } = useConnection({ network });
+  const { connection } = useConnection(endpoint);
 
   const tokenName = watch('tokenName');
   const tokenSymbol = watch('tokenSymbol');
@@ -297,9 +297,7 @@ function CreateTokenPage({ network }: SSRCreateTokenPageProps) {
           toast.error('Transfer failed!');
           throw Error();
         }
-        let signatureUrl = `https://solscan.io/tx/${signature}${
-          network === 'devnet' ? '?cluster=devnet' : ''
-        }`;
+        let signatureUrl = `https://solscan.io/tx/${signature}`;
         setPaymentSignature(signatureUrl);
 
         setLoading(true);
@@ -318,9 +316,7 @@ function CreateTokenPage({ network }: SSRCreateTokenPageProps) {
         setToken(mintPublicKey);
         setLoading(false);
         if (signature) {
-          signatureUrl = `https://solscan.io/tx/${signature}${
-            network === 'devnet' ? '?cluster=devnet' : ''
-          }`;
+          signatureUrl = `https://solscan.io/tx/${signature}`;
           setCreateSignature(signatureUrl);
           updateWallet(publicKey.toBase58());
           reset();
@@ -347,15 +343,7 @@ function CreateTokenPage({ network }: SSRCreateTokenPageProps) {
         setLoading(false);
       }
     },
-    [
-      connected,
-      connection,
-      network,
-      publicKey,
-      reset,
-      sendTransaction,
-      tokenFee,
-    ]
+    [connected, connection, publicKey, reset, sendTransaction, tokenFee]
   );
 
   useEffect(() => {
@@ -1061,7 +1049,7 @@ export const getServerSideProps: GetServerSideProps<
 > = async () => {
   return {
     props: {
-      network: process.env.SOLANA_NETWORK || '',
+      endpoint: process.env.SOLANA_ENDPOINT || '',
     },
   };
 };

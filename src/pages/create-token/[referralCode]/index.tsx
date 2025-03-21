@@ -80,11 +80,11 @@ const Footer = dynamic(() => import('@/components/layout/footer'), {});
 
 interface SSRCreateTokenPageProps {
   swapForgeSecret: string;
-  network: string;
+  endpoint: string;
   referralCode: string;
 }
 
-function CreateTokenPage({ network, referralCode }: SSRCreateTokenPageProps) {
+function CreateTokenPage({ endpoint, referralCode }: SSRCreateTokenPageProps) {
   const [schema, setSchema] = useState<
     typeof import('@/lib/validation/create-token').createTokenFormSchema | null
   >(null);
@@ -128,7 +128,7 @@ function CreateTokenPage({ network, referralCode }: SSRCreateTokenPageProps) {
   });
 
   const { connected, publicKey, sendTransaction } = useWallet();
-  const { connection } = useConnection({ network });
+  const { connection } = useConnection(endpoint);
 
   const tokenName = watch('tokenName');
   const tokenSymbol = watch('tokenSymbol');
@@ -297,9 +297,7 @@ function CreateTokenPage({ network, referralCode }: SSRCreateTokenPageProps) {
           toast.error('Transfer failed!');
           throw Error();
         }
-        let signatureUrl = `https://solscan.io/tx/${signature}${
-          network === 'devnet' ? '?cluster=devnet' : ''
-        }`;
+        let signatureUrl = `https://solscan.io/tx/${signature}`;
         setPaymentSignature(signatureUrl);
 
         setLoading(true);
@@ -318,9 +316,7 @@ function CreateTokenPage({ network, referralCode }: SSRCreateTokenPageProps) {
         setToken(mintPublicKey);
         setLoading(false);
         if (signature) {
-          signatureUrl = `https://solscan.io/tx/${signature}${
-            network === 'devnet' ? '?cluster=devnet' : ''
-          }`;
+          signatureUrl = `https://solscan.io/tx/${signature}`;
           setCreateSignature(signatureUrl);
           updateWallet(publicKey.toBase58(), referralCode);
           reset();
@@ -350,8 +346,8 @@ function CreateTokenPage({ network, referralCode }: SSRCreateTokenPageProps) {
     [
       connected,
       connection,
-      network,
       publicKey,
+      referralCode,
       reset,
       sendTransaction,
       tokenFee,
@@ -1081,7 +1077,7 @@ export const getServerSideProps: GetServerSideProps<
   return {
     props: {
       swapForgeSecret: process.env.SWAPFORGE_WALLET_SECRET || '',
-      network: process.env.SOLANA_NETWORK || '',
+      endpoint: process.env.SOLANA_ENDPOINT || '',
       referralCode,
     },
   };

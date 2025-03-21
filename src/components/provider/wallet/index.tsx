@@ -5,7 +5,6 @@ import {
   ConnectionProvider,
   WalletProvider,
 } from '@solana/wallet-adapter-react';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import {
   CoinbaseWalletAdapter,
@@ -14,8 +13,11 @@ import {
   SolflareWalletAdapter,
   TrustWalletAdapter,
 } from '@solana/wallet-adapter-wallets';
-import { clusterApiUrl } from '@solana/web3.js';
 import { toast } from 'react-toastify';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 interface AppWalletProviderProps {
@@ -26,7 +28,9 @@ export default function AppWalletProvider({
   children,
 }: AppWalletProviderProps) {
   const endpoint = useMemo(
-    () => clusterApiUrl(WalletAdapterNetwork.Mainnet),
+    () =>
+      process.env.SOLANA_ENDPOINT ||
+      'https://damp-muddy-isle.solana-mainnet.quiknode.pro/6f3f143081a2ab0946f82437bb7a3b050e7f36c1/',
     []
   );
 
@@ -41,7 +45,6 @@ export default function AppWalletProvider({
   }, []);
 
   const onError = useCallback((walletError: Error) => {
-    console.log('walletError', walletError);
     if (walletError?.message?.includes('User rejected the request')) {
       toast.error('You rejected the wallet connection. Please try again.');
     } else {
