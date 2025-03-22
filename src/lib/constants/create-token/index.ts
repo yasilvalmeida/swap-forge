@@ -1,8 +1,8 @@
 export const TOKEN_NAME_MAX_CHARS = 30;
 export const TOKEN_SYMBOL_MAX_CHARS = 10;
-export const MAX_LOGO_SIZE = 512;
-export const MAX_LOGO_WIDTH = 512;
-export const MAX_LOGO_HEIGHT = 512;
+export const MAX_LOGO_SIZE = 1024;
+export const MAX_LOGO_WIDTH = 128;
+export const MAX_LOGO_HEIGHT = 128;
 export const CREATE_TOKEN_FEE = 0.1;
 export const REVOKE_MINT_FEE = 0.1;
 export const REVOKE_FREEZE_FEE = 0.1;
