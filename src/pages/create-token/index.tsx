@@ -101,7 +101,7 @@ function CreateTokenPage({ endpoint }: SSRCreateTokenPageProps) {
     defaultValues: {
       tokenName: '',
       tokenSymbol: '',
-      tokenDecimals: '6',
+      tokenDecimals: '9',
       tokenSupply: '',
       tokenDescription: '',
       tags: [],

@@ -50,9 +50,17 @@ export default async function handler(
           $set: {
             walletAddress,
             referralCode,
-            tokensCreated: 0,
             referralBy: referralWallet?.publicAddress,
           },
+          $inc: { tokensCreated: 1 },
+        },
+        { upsert: true }
+      );
+    } else {
+      await database.collection<WalletRequestDto>(WALLET_COLLECTION).updateOne(
+        { walletAddress },
+        {
+          $inc: { tokensCreated: 1 },
         },
         { upsert: true }
       );
