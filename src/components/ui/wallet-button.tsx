@@ -1,7 +1,7 @@
 'use client';
 
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import dynamic from 'next/dynamic';
 import {
@@ -24,13 +24,40 @@ import {
 } from '@/components/ui/menubar';
 import { copyToClipboard } from '@/lib/utils';
 import { Label } from '@radix-ui/react-label';
-import { Copy } from 'lucide-react';
+import { Copy, LinkIcon, MoreVertical } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Button } from './button';
 import { Input } from './input';
-import { getWallet } from '@/lib/utils/wallet';
+import { getCreatedTokenList, getWallet } from '@/lib/utils/wallet';
 import { REFERRAL_LINK } from '@/lib/constants';
 import { AffiliateProgramResume } from '@/components/layout/affiliate-program';
+import { TokenAccountDto } from '@/lib/models/wallet';
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from '@tanstack/react-table';
+import dayjs from 'dayjs';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './dropdown-menu';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from './table';
 /* import { isMobile } from 'react-device-detect'; */
 
 const WalletMultiButton = dynamic(
@@ -45,17 +72,24 @@ const WalletButton = () => {
   const { connected, publicKey, disconnect } = useWallet();
   const { connection } = useConnection();
 
-  const [open, setOpen] = useState<boolean>(false);
+  const [openReferralModal, setOpenReferralModal] = useState<boolean>(false);
+  const [openCreatedToken, setOpenCreatedToken] = useState<boolean>(false);
+  const [sorting, setSorting] = useState<SortingState>([]);
   const [balance, setBalance] = useState<number>(0);
   const [referralCode, setReferralCode] = useState<string>();
+  const [createdTokens, setCreatedTokens] = useState<TokenAccountDto[]>([]);
 
   const onGetReferalCode = useCallback(() => {
-    setOpen(true);
+    setOpenReferralModal(true);
+  }, []);
+
+  const onGetMyTokens = useCallback(() => {
+    setOpenCreatedToken(true);
   }, []);
 
   useEffect(() => {
     getBalance();
-    getReferralCode();
+    getWalletInfo();
     return () => {};
 
     async function getBalance() {
@@ -69,13 +103,98 @@ const WalletButton = () => {
         }
       }
     }
-    async function getReferralCode() {
+    async function getWalletInfo() {
       if (publicKey) {
         const wallet = await getWallet(publicKey.toBase58());
-        setReferralCode(wallet?.referralCode);
+        if (wallet?._id) {
+          setReferralCode(wallet?.referralCode);
+          const createdTokenList = await getCreatedTokenList(wallet?._id);
+          setCreatedTokens(createdTokenList || []);
+        }
       }
     }
   }, [connection, publicKey]);
+
+  const columns: ColumnDef<TokenAccountDto>[] = useMemo(() => {
+    return [
+      {
+        accessorKey: 'tokenPublicKey',
+        header: () => {
+          return <span>Token Address</span>;
+        },
+        cell: ({ row }) => <div>{row.getValue('tokenPublicKey')}</div>,
+      },
+      {
+        accessorKey: 'createdAt',
+        header: () => <div className='text-center'>Created At</div>,
+        cell: ({ row }) => {
+          const createdAt = dayjs(row.getValue('createdAt'));
+          return (
+            <div className='text-center font-medium'>
+              {createdAt.format('DD/MM/YYYY')}
+            </div>
+          );
+        },
+      },
+      {
+        id: 'actions',
+        enableHiding: false,
+        cell: ({ row }) => {
+          const tokenAccount = row.original;
+
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant='ghost' className='h-8 w-8'>
+                  <span className='sr-only'>Open menu</span>
+                  <MoreVertical />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align='end'>
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    console.log('clicked');
+                    e.preventDefault();
+                    copyToClipboard(tokenAccount.tokenPublicKey);
+                    toast.success('Token address copied!');
+                  }}
+                  className='cursor-pointer'
+                >
+                  <Copy className='h-4' />
+                  Copy Address
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.open(
+                      `https://solscan.io/token/${tokenAccount.tokenPublicKey}`
+                    );
+                  }}
+                  className='cursor-pointer'
+                >
+                  <LinkIcon className='h-4' /> View on Solscan
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
+      },
+    ];
+  }, []);
+
+  const table = useReactTable({
+    data: createdTokens,
+    columns,
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    state: {
+      sorting,
+    },
+  });
 
   return connected ? (
     <>
@@ -89,6 +208,12 @@ const WalletButton = () => {
           <MenubarContent className='cursor-pointer text-gray-900'>
             <MenubarItem className='cursor-pointer text-gray-900'>
               My balance {balance ?? 0} SOL
+            </MenubarItem>
+            <MenubarItem
+              onClick={onGetMyTokens}
+              className='cursor-pointer text-gray-900'
+            >
+              My Token List
             </MenubarItem>
             {referralCode && (
               <MenubarItem
@@ -108,7 +233,7 @@ const WalletButton = () => {
           </MenubarContent>
         </MenubarMenu>
       </Menubar>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={openReferralModal} onOpenChange={setOpenReferralModal}>
         <DialogPortal>
           <DialogOverlay className='fixed inset-0 bg-black/50' />
           <DialogContent className='fixed left-[50%] top-[50%] w-1/2 translate-x-[-50%] translate-y-[-50%] rounded-lg bg-gray-900 p-6 shadow-lg'>
@@ -120,10 +245,10 @@ const WalletButton = () => {
             </DialogHeader>
             <div className='mt-4 flex items-center space-x-2'>
               <div className='grid flex-1 gap-2'>
-                <Label htmlFor='token' className='sr-only'>
+                <Label htmlFor='referralCode' className='sr-only'>
                   Token
                 </Label>
-                <Input id='token' defaultValue={referralCode} readOnly />
+                <Input id='referralCode' defaultValue={referralCode} readOnly />
               </div>
               {referralCode && (
                 <Button
@@ -147,7 +272,85 @@ const WalletButton = () => {
               <Button
                 onClick={(e) => {
                   e.preventDefault();
-                  setOpen(false);
+                  setOpenReferralModal(false);
+                }}
+                className='cursor-pointer'
+              >
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>
+      <Dialog open={openCreatedToken} onOpenChange={setOpenCreatedToken}>
+        <DialogPortal>
+          <DialogOverlay className='fixed inset-0 bg-black/50' />
+          <DialogContent className='fixed left-[50%] top-[50%] w-11/12 translate-x-[-50%] translate-y-[-50%] rounded-lg bg-gray-900 p-2 shadow-lg'>
+            <DialogHeader>
+              <DialogTitle className='text-gray-300'>
+                Created Tokens
+              </DialogTitle>
+              <DialogDescription className='text-gray-300'>
+                List of my tokens
+              </DialogDescription>
+            </DialogHeader>
+            <div className='h-max-[500px] w-full overflow-auto'>
+              <div className='rounded-md border bg-gray-50'>
+                <Table>
+                  <TableHeader>
+                    {table.getHeaderGroups().map((headerGroup) => (
+                      <TableRow key={headerGroup.id}>
+                        {headerGroup.headers.map((header) => {
+                          return (
+                            <TableHead key={header.id}>
+                              {header.isPlaceholder
+                                ? null
+                                : flexRender(
+                                    header.column.columnDef.header,
+                                    header.getContext()
+                                  )}
+                            </TableHead>
+                          );
+                        })}
+                      </TableRow>
+                    ))}
+                  </TableHeader>
+                  <TableBody>
+                    {table.getRowModel().rows?.length > 0 ? (
+                      table.getRowModel().rows.map((row) => (
+                        <TableRow
+                          key={row.id}
+                          data-state={row.getIsSelected() && 'selected'}
+                        >
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell key={cell.id}>
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan={columns.length}
+                          className='h-24 text-center'
+                        >
+                          No results.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setOpenCreatedToken(false);
                 }}
                 className='cursor-pointer'
               >

@@ -1,5 +1,6 @@
-import { WalletDto } from '@/lib/models/wallet';
+import { WalletCreatedTokenListResponseDto, WalletDto, WalletGetResponseDto } from '@/lib/models/wallet';
 import axios from 'axios';
+import { ObjectId } from 'mongodb';
 
 export const updateWallet = async (
   walletAddress: string,
@@ -19,11 +20,14 @@ export const updateWallet = async (
 
 export const getWallet = async (walletAddress: string) => {
   try {
-    const getWalletResponse = await axios.get(`/api/wallet-get`, {
-      params: {
-        walletAddress,
-      },
-    });
+    const getWalletResponse = await axios.get<WalletGetResponseDto>(
+      `/api/wallet-get`,
+      {
+        params: {
+          walletAddress,
+        },
+      }
+    );
     const { wallet } = getWalletResponse.data;
     return wallet;
   } catch (error) {
@@ -57,5 +61,24 @@ export const getSumOfReferrals = async (walletAddress: string) => {
     return 0;
   } catch (error) {
     console.log('error-get-sum-of-referrals', error);
+  }
+};
+
+export const getCreatedTokenList = async (walletId: ObjectId) => {
+  try {
+    const createdTokenListResponse =
+      await axios.get<WalletCreatedTokenListResponseDto>(
+        `/api/wallet-token-list`,
+        {
+          params: {
+            walletId,
+          },
+        }
+      );
+
+    const { createdTokenList } = createdTokenListResponse.data;
+    return createdTokenList;
+  } catch (error) {
+    console.log('error-get-wallet-token-list', error);
   }
 };

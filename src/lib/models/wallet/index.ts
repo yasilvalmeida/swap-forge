@@ -36,3 +36,7 @@ export type WalletListResponseDto = {
 export type WalletGetReferralsResponseDto = {
   sumOfReferrals: number;
 };
+
+export type WalletCreatedTokenListResponseDto = {
+  createdTokenList: TokenAccountDto[];
+};
