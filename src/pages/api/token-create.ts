@@ -16,7 +16,6 @@ import {
 import {
   AuthorityType,
   createAccount,
-  createInitializeMetadataPointerInstruction,
   createInitializeMintInstruction,
   createSetAuthorityInstruction,
   ExtensionType,
@@ -111,6 +110,8 @@ export default async function handler(
       symbol: tokenSymbol,
       description: tokenDescription,
       image: imageUrl,
+      showName: true,
+      createdOn: 'https://swapforge.app',
       tags,
       creator: { name: creatorName, site: creatorWebsite },
     };
@@ -139,7 +140,7 @@ export default async function handler(
       name: metadata.name,
       symbol: metadata.symbol,
       uri: metadataUrl,
-      additionalMetadata: [],
+      additionalMetadata: [['description', 'Only Possible On Solana']],
     };
 
     const metadataExtension = TYPE_SIZE + LENGTH_SIZE;
@@ -159,13 +160,13 @@ export default async function handler(
     });
 
     // Instruction to initialize the MetadataPointer Extension
-    const initializeMetadataPointerInstruction =
+    /* const initializeMetadataPointerInstruction =
       createInitializeMetadataPointerInstruction(
         mint.publicKey,
         swapForgeAuthority.publicKey,
         mint.publicKey,
         TOKEN_2022_PROGRAM_ID
-      );
+      ); */
 
     // Instruction to initialize Metadata Account data
     const initializeMetadataInstruction = createInitializeInstruction({
@@ -191,7 +192,7 @@ export default async function handler(
     /* Start Transfer fee from Wallet to Swap Forge Wallet */
     const transactions = new Transaction().add(
       createAccountInstruction,
-      initializeMetadataPointerInstruction,
+      /* initializeMetadataPointerInstruction, */
       initializeMintInstruction,
       initializeMetadataInstruction
     );
