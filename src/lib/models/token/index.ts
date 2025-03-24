@@ -7,9 +7,8 @@ export type MetadataDto = {
   name: string;
   symbol: string;
   description: string;
-  image: string; // URL or file path to the token image
+  image: string;
   tags?: string[];
-  showName: boolean;
   createdOn: string;
   creator?: CreatorDto;
   website?: string;

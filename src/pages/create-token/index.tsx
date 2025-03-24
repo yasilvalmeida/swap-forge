@@ -68,7 +68,9 @@ import { PaymentResponseDto } from '@/lib/models/payment';
 import { getSumOfReferrals, updateWallet } from '@/lib/utils/wallet';
 import { GetServerSideProps } from 'next';
 import FrequentAnswersAndQuestions from '@/components/layout/frequent-answer-question';
+import PromotionCountdown from '@/components/ui/promotion-count-down';
 import dotenv from 'dotenv';
+import dayjs from 'dayjs';
 
 dotenv.config();
 
@@ -78,9 +80,13 @@ const Footer = dynamic(() => import('@/components/layout/footer'), {});
 
 interface SSRCreateTokenPageProps {
   endpoint: string;
+  promotionEndDate: string;
 }
 
-function CreateTokenPage({ endpoint }: SSRCreateTokenPageProps) {
+function CreateTokenPage({
+  endpoint,
+  promotionEndDate,
+}: SSRCreateTokenPageProps) {
   const [schema, setSchema] = useState<
     typeof import('@/lib/validation/create-token').createTokenFormSchema | null
   >(null);
@@ -148,6 +154,12 @@ function CreateTokenPage({ endpoint }: SSRCreateTokenPageProps) {
   const [discount, setDiscount] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
+  const promotionDiscount = useMemo(() => {
+    const today = dayjs();
+    const endDate = dayjs(promotionEndDate);
+    return today.isBefore(endDate) ? 0.5 : 0;
+  }, [promotionEndDate]);
+
   const computedTotalFee = useMemo(() => {
     let totalFee = 0;
     if (revokeMint) {
@@ -167,9 +179,20 @@ function CreateTokenPage({ endpoint }: SSRCreateTokenPageProps) {
     if (discount > 0) {
       computedTotalFee = computedTotalFee - computedTotalFee * discount;
     }
+    if (promotionDiscount > 0) {
+      computedTotalFee =
+        computedTotalFee - computedTotalFee * promotionDiscount;
+    }
     setValue('tokenFee', computedTotalFee);
     return computedTotalFee;
-  }, [discount, immutable, revokeFreeze, revokeMint, setValue]);
+  }, [
+    discount,
+    immutable,
+    revokeFreeze,
+    revokeMint,
+    promotionDiscount,
+    setValue,
+  ]);
 
   const onFileUpload = useCallback(
     async (file?: File) => {
@@ -321,7 +344,7 @@ function CreateTokenPage({ endpoint }: SSRCreateTokenPageProps) {
         if (signature) {
           signatureUrl = `https://solscan.io/tx/${signature}`;
           setCreateSignature(signatureUrl);
-          updateWallet(publicKey.toBase58());
+          updateWallet(publicKey.toBase58(), mintPublicKey);
           reset();
           toast.success('Your token has been created!');
           setTitle('Successful');
@@ -477,6 +500,15 @@ function CreateTokenPage({ endpoint }: SSRCreateTokenPageProps) {
       {/* Wallet Connection Button */}
       <div className='absolute right-4 top-4'>
         <WalletButton />
+      </div>
+
+      <div className='mx-auto flex justify-center py-4'>
+        {promotionDiscount && (
+          <PromotionCountdown
+            endDate={promotionEndDate}
+            discount={promotionDiscount}
+          />
+        )}
       </div>
 
       {/* Token Creation Form */}
@@ -1053,6 +1085,7 @@ export const getServerSideProps: GetServerSideProps<
   return {
     props: {
       endpoint: process.env.SOLANA_ENDPOINT || '',
+      promotionEndDate: process.env.PROMOTION_END_DATE || '',
     },
   };
 };

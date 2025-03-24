@@ -3,11 +3,13 @@ import axios from 'axios';
 
 export const updateWallet = async (
   walletAddress: string,
+  mintAddress: string,
   referralCode?: string
 ) => {
   try {
     await axios.post('/api/wallet-update', {
       walletAddress,
+      mintAddress,
       referralCode,
     });
   } catch (error) {
@@ -40,11 +42,14 @@ export const listWallet = async () => {
 
 export const getSumOfReferrals = async (walletAddress: string) => {
   try {
-    const getSumOfReferralsResponse = await axios.get(`/api/wallet-referrals-get`, {
-      params: {
-        walletAddress,
-      },
-    });
+    const getSumOfReferralsResponse = await axios.get(
+      `/api/wallet-referrals-get`,
+      {
+        params: {
+          walletAddress,
+        },
+      }
+    );
     const { sumOfReferrals } = getSumOfReferralsResponse.data;
     if (sumOfReferrals >= 25) return 0.5;
     if (sumOfReferrals >= 10) return 0.2;

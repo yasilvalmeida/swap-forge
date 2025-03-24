@@ -8,8 +8,10 @@ import {
 } from '@/lib/constants/http';
 import {
   WALLET_COLLECTION,
+  TOKEN_COLLECTION,
   WalletDto,
   WalletRequestDto,
+  TokenAccountDto,
 } from '@/lib/models/wallet';
 import { ErrorResponseDto, SuccessResponseDto } from '@/lib/models';
 import { v4 as uuidv4 } from 'uuid';
@@ -25,7 +27,8 @@ export default async function handler(
         .json({ error: 'Method not allowed' });
     }
 
-    const { walletAddress, referralCode }: WalletRequestDto = req.body;
+    const { walletAddress, tokenAddress, referralCode }: WalletRequestDto =
+      req.body;
 
     if (!walletAddress) {
       return res
@@ -33,18 +36,20 @@ export default async function handler(
         .json({ error: 'Wallet address is required' });
     }
 
-    const [referralWallet, wallet] = await Promise.all([
-      database.collection<WalletDto>(WALLET_COLLECTION).findOne({
+    const referralWallet = await database
+      .collection<WalletDto>(WALLET_COLLECTION)
+      .findOne({
         referralCode,
-      }),
-      database.collection<WalletDto>(WALLET_COLLECTION).findOne({
+      });
+    let wallet = await database
+      .collection<WalletDto>(WALLET_COLLECTION)
+      .findOne({
         walletAddress,
-      }),
-    ]);
+      });
 
     if (!wallet) {
       const referralCode = uuidv4();
-      await database.collection<WalletRequestDto>(WALLET_COLLECTION).updateOne(
+      await database.collection<WalletDto>(WALLET_COLLECTION).updateOne(
         { walletAddress },
         {
           $set: {
@@ -56,7 +61,27 @@ export default async function handler(
         },
         { upsert: true }
       );
+
+      wallet = await database.collection<WalletDto>(WALLET_COLLECTION).findOne({
+        walletAddress,
+      });
+
+      if (wallet) {
+        await database.collection<TokenAccountDto>(TOKEN_COLLECTION).insertOne({
+          walletId: wallet?._id,
+          walletAddress: wallet?.publicAddress,
+          tokenPublicKey: tokenAddress,
+          createdAt: new Date(),
+        });
+      }
     } else {
+      await database.collection<TokenAccountDto>(TOKEN_COLLECTION).insertOne({
+        walletId: wallet?._id,
+        walletAddress: wallet?.publicAddress,
+        tokenPublicKey: tokenAddress,
+        createdAt: new Date(),
+      });
+
       await database.collection<WalletRequestDto>(WALLET_COLLECTION).updateOne(
         { walletAddress },
         {

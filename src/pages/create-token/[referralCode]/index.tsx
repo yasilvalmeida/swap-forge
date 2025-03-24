@@ -70,7 +70,9 @@ import { WALLET_COLLECTION, WalletDto } from '@/lib/models/wallet';
 import { updateWallet } from '@/lib/utils/wallet';
 import { PaymentResponseDto } from '@/lib/models/payment';
 import FrequentAnswersAndQuestions from '@/components/layout/frequent-answer-question';
+import PromotionCountdown from '@/components/ui/promotion-count-down';
 import dotenv from 'dotenv';
+import dayjs from 'dayjs';
 
 dotenv.config();
 
@@ -81,10 +83,15 @@ const Footer = dynamic(() => import('@/components/layout/footer'), {});
 interface SSRCreateTokenPageProps {
   swapForgeSecret: string;
   endpoint: string;
+  promotionEndDate: string;
   referralCode: string;
 }
 
-function CreateTokenPage({ endpoint, referralCode }: SSRCreateTokenPageProps) {
+function CreateTokenPage({
+  endpoint,
+  promotionEndDate,
+  referralCode,
+}: SSRCreateTokenPageProps) {
   const [schema, setSchema] = useState<
     typeof import('@/lib/validation/create-token').createTokenFormSchema | null
   >(null);
@@ -151,6 +158,12 @@ function CreateTokenPage({ endpoint, referralCode }: SSRCreateTokenPageProps) {
   const [token, setToken] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
+  const promotionDiscount = useMemo(() => {
+    const today = dayjs();
+    const endDate = dayjs(promotionEndDate);
+    return today.isBefore(endDate) ? 0.5 : 0;
+  }, [promotionEndDate]);
+
   const computedTotalFee = useMemo(() => {
     let totalFee = 0;
     if (revokeMint) {
@@ -166,10 +179,14 @@ function CreateTokenPage({ endpoint, referralCode }: SSRCreateTokenPageProps) {
       totalFee = Number(sum.toFixed(2));
     }
     const sum = totalFee + CREATE_TOKEN_FEE;
-    const computedTotalFee = Number(sum.toFixed(2));
+    let computedTotalFee = Number(sum.toFixed(2));
+    if (promotionDiscount > 0) {
+      computedTotalFee =
+        computedTotalFee - computedTotalFee * promotionDiscount;
+    }
     setValue('tokenFee', computedTotalFee);
     return computedTotalFee;
-  }, [immutable, revokeFreeze, revokeMint, setValue]);
+  }, [immutable, revokeFreeze, revokeMint, promotionDiscount, setValue]);
 
   const onFileUpload = useCallback(
     async (file?: File) => {
@@ -323,7 +340,7 @@ function CreateTokenPage({ endpoint, referralCode }: SSRCreateTokenPageProps) {
         if (signature) {
           signatureUrl = `https://solscan.io/tx/${signature}`;
           setCreateSignature(signatureUrl);
-          updateWallet(publicKey.toBase58(), referralCode);
+          updateWallet(publicKey.toBase58(), mintPublicKey, referralCode);
           reset();
           toast.success('Your token has been created!');
           setTitle('Successful');
@@ -475,6 +492,15 @@ function CreateTokenPage({ endpoint, referralCode }: SSRCreateTokenPageProps) {
       {/* Wallet Connection Button */}
       <div className='absolute right-4 top-4'>
         <WalletButton />
+      </div>
+
+      <div className='mx-auto flex justify-center py-4'>
+        {promotionDiscount && (
+          <PromotionCountdown
+            endDate={promotionEndDate}
+            discount={promotionDiscount}
+          />
+        )}
       </div>
 
       {/* Token Creation Form */}
@@ -1083,6 +1109,7 @@ export const getServerSideProps: GetServerSideProps<
     props: {
       swapForgeSecret: process.env.SWAPFORGE_WALLET_SECRET || '',
       endpoint: process.env.SOLANA_ENDPOINT || '',
+      promotionEndDate: process.env.PROMOTION_END_DATE || '',
       referralCode,
     },
   };

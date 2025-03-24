@@ -108,8 +108,7 @@ export default async function handler(
       symbol: tokenSymbol,
       description: tokenDescription,
       image: imageUrl,
-      showName: true,
-      createdOn: 'https://swapforge.app',
+      createdOn: creatorWebsite,
       tags,
       creator: { name: creatorName, site: creatorWebsite },
     };
@@ -133,17 +132,14 @@ export default async function handler(
       matedataBase64,
       'application/json'
     );
-    
+
     const tokenMetadata: TokenMetadata = {
       updateAuthority: undefined,
       mint: mint.publicKey,
       name: metadata.name,
       symbol: metadata.symbol,
       uri: metadataUrl,
-      additionalMetadata: [
-        ['showName', 'true'],
-        ['createOn', 'https://swapforge.app'],
-      ],
+      additionalMetadata: [],
     };
 
     const metadataExtension = TYPE_SIZE + LENGTH_SIZE;

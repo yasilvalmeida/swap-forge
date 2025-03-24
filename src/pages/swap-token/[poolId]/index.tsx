@@ -19,7 +19,11 @@ import {
   FormItem,
   FormMessage,
 } from '@/components/ui/form';
-import { getPoolById, getTokenList } from '@/lib/utils/raydium';
+import {
+  getCreateLiquidityFee,
+  getPoolById,
+  getTokenList,
+} from '@/lib/utils/raydium';
 import { ApiV3PoolInfoItem, ApiV3Token } from '@raydium-io/raydium-sdk-v2';
 import { Keypair } from '@solana/web3.js';
 import { GetServerSideProps } from 'next';
@@ -141,6 +145,12 @@ function SwapTokenPage({
     import('@/lib/validation/swap-token').then((module) => {
       setSchema(module.swapTokenFormSchema);
     });
+    const getFee = async () => {
+      const createLiquidityFee = await getCreateLiquidityFee();
+      console.log('createLiquidityFee', createLiquidityFee);
+      
+    };
+    getFee();
   }, []);
 
   return (

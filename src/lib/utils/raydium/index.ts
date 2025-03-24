@@ -1,10 +1,14 @@
-import { Connection } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/web3.js';
 import {
+  ApiV3PoolInfoItem,
   FetchPoolParams,
   PoolFetchType,
   Raydium,
 } from '@raydium-io/raydium-sdk-v2';
 import { toast } from 'react-toastify';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const raydium = await Raydium.load({
   connection: new Connection(
@@ -64,4 +68,32 @@ const getTokenList = async () => {
   }
 };
 
-export { raydium, getPoolList, getPoolById, getTokenList };
+const getCreateLiquidityFee = async () => {
+  try {
+    const raydiumProgramId = process.env.NEXT_PUBLIC_RAYDIUM_PROGRAM_ID;
+    if (!raydiumProgramId)
+      throw Error('Invalid or not found Raydium Program ID');
+    const fee = await raydium.liquidity.getCreatePoolFee({
+      programId: new PublicKey(raydiumProgramId),
+    });
+    return fee;
+  } catch (error) {
+    if (error instanceof Error) {
+      toast.error(error.message);
+    }
+  }
+};
+
+const lockLiquidity = async (pool: ApiV3PoolInfoItem) => {
+  console.log('pool', pool);
+  /* await raydium.cpmm.lockLp() */
+};
+
+export {
+  raydium,
+  getPoolList,
+  getPoolById,
+  getTokenList,
+  getCreateLiquidityFee,
+  lockLiquidity,
+};
