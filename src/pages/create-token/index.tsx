@@ -503,7 +503,7 @@ function CreateTokenPage({
       </div>
 
       <div className='mx-auto flex justify-center py-4'>
-        {promotionDiscount && (
+        {promotionDiscount > 0 && (
           <PromotionCountdown
             endDate={promotionEndDate}
             discount={promotionDiscount}
