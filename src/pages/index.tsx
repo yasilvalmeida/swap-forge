@@ -196,20 +196,22 @@ export default function Home() {
             Join a growing community of developers, creators, and traders on
             SwapForge.
           </p>
-          <Link
-            href='https://x.com/SwapForgeApp'
-            className='rounded-lg bg-yellow-400 px-6 py-3 font-semibold text-gray-900 transition duration-300 hover:bg-yellow-500'
-            target='_blank'
-          >
-            Follow us on X
-          </Link>
-          <Link
-            href='https://t.me/swapforge'
-            className='rounded-lg bg-yellow-400 px-6 py-3 font-semibold text-gray-900 transition duration-300 hover:bg-yellow-500'
-            target='_blank'
-          >
-            Join Our Telegram Group
-          </Link>
+          <div className='flex flex-row justify-center gap-2'>
+            <Link
+              href='https://x.com/SwapForgeApp'
+              className='w-44 rounded-lg bg-yellow-400 px-6 py-3 font-semibold text-gray-900 transition duration-300 hover:bg-yellow-500'
+              target='_blank'
+            >
+              Follow us on X
+            </Link>
+            <Link
+              href='https://t.me/swapforge'
+              className='w-44 rounded-lg bg-yellow-400 px-6 py-3 font-semibold text-gray-900 transition duration-300 hover:bg-yellow-500'
+              target='_blank'
+            >
+              Join Our Group
+            </Link>
+          </div>
         </div>
       </section>
 
