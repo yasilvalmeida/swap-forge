@@ -16,6 +16,7 @@ import {
 import {
   AuthorityType,
   createAccount,
+  createInitializeMetadataPointerInstruction,
   createInitializeMintInstruction,
   createSetAuthorityInstruction,
   ExtensionType,
@@ -38,10 +39,7 @@ import {
   HTTP_SUCCESS,
 } from '@/lib/constants/http';
 import { getConnection } from '@/lib/utils/token';
-import {
-  uploadMediaToCloudinary,
-  uploadRawToCloudinary,
-} from '@/lib/utils/cloudinary';
+import { uploadFileToPinata } from '@/lib/utils/pinata';
 import dotenv from 'dotenv';
 import bs58 from 'bs58';
 import { sleep } from '@raydium-io/raydium-sdk-v2';
@@ -103,7 +101,7 @@ export default async function handler(
     const swapForgeAuthority = Keypair.fromSecretKey(bs58.decode(privateKey));
 
     // Store and retrieve uri of image
-    const imageUrl = await uploadMediaToCloudinary(tokenLogo);
+    const imageUrl = await uploadFileToPinata(tokenLogo, 'image/png');
 
     const metadata: MetadataDto = {
       name: tokenName,
@@ -129,18 +127,22 @@ export default async function handler(
       metadata['facebook'] = socialFacebook;
       metadata['instragram'] = socialInstagram;
     }
-    // Store json file and retrieve uri of metadata
-    const metadataJsonString = JSON.stringify(metadata); // Convert object to JSON string
+    const metadataJsonString = JSON.stringify(metadata);
     const matedataBase64 = Buffer.from(metadataJsonString).toString('base64');
-    const metadataUrl = await uploadRawToCloudinary(matedataBase64);
-
+    const metadataUrl = await uploadFileToPinata(
+      matedataBase64,
+      'application/json'
+    );
     const tokenMetadata: TokenMetadata = {
       updateAuthority: undefined,
       mint: mint.publicKey,
       name: metadata.name,
       symbol: metadata.symbol,
       uri: metadataUrl,
-      additionalMetadata: [['description', 'Only Possible On Solana']],
+      additionalMetadata: [
+        ['showName', 'true'],
+        ['createOn', 'https://swapforge.app'],
+      ],
     };
 
     const metadataExtension = TYPE_SIZE + LENGTH_SIZE;
@@ -160,13 +162,13 @@ export default async function handler(
     });
 
     // Instruction to initialize the MetadataPointer Extension
-    /* const initializeMetadataPointerInstruction =
+    const initializeMetadataPointerInstruction =
       createInitializeMetadataPointerInstruction(
         mint.publicKey,
         swapForgeAuthority.publicKey,
         mint.publicKey,
         TOKEN_2022_PROGRAM_ID
-      ); */
+      );
 
     // Instruction to initialize Metadata Account data
     const initializeMetadataInstruction = createInitializeInstruction({
@@ -192,7 +194,7 @@ export default async function handler(
     /* Start Transfer fee from Wallet to Swap Forge Wallet */
     const transactions = new Transaction().add(
       createAccountInstruction,
-      /* initializeMetadataPointerInstruction, */
+      initializeMetadataPointerInstruction,
       initializeMintInstruction,
       initializeMetadataInstruction
     );
