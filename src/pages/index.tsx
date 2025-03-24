@@ -201,7 +201,14 @@ export default function Home() {
             className='rounded-lg bg-yellow-400 px-6 py-3 font-semibold text-gray-900 transition duration-300 hover:bg-yellow-500'
             target='_blank'
           >
-            Join Now
+            Follow us on X
+          </Link>
+          <Link
+            href='https://t.me/swapforge'
+            className='rounded-lg bg-yellow-400 px-6 py-3 font-semibold text-gray-900 transition duration-300 hover:bg-yellow-500'
+            target='_blank'
+          >
+            Join Our Telegram Group
           </Link>
         </div>
       </section>
