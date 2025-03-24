@@ -133,6 +133,7 @@ export default async function handler(
       matedataBase64,
       'application/json'
     );
+    
     const tokenMetadata: TokenMetadata = {
       updateAuthority: undefined,
       mint: mint.publicKey,

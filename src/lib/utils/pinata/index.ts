@@ -10,20 +10,23 @@ const pinata = new PinataSDK({
 });
 
 export const uploadFileToPinata = async (
-  base64: string,
+  imageOrJsonBase64: string,
   type: 'image/png' | 'application/json'
 ) => {
   try {
-    const result = await pinata.upload.public.base64(base64, {
-      metadata: {
-        name: uuidv4(),
-        keyvalues: {
-          type,
-          uploadedBy: 'SwapForge'
-        }
-      },
-    });
-    return result.id;
+    let base64 = '';
+    if (imageOrJsonBase64.includes('data:image/png;base64,')) {
+      base64 = imageOrJsonBase64.split(',')[1];
+    } else {
+      base64 = imageOrJsonBase64;
+    }
+    const result = await pinata.upload.public
+      .base64(base64)
+      .name(`${uuidv4()}.${type === 'image/png' ? 'png' : 'json'}`)
+      .keyvalues({
+        uploadedBy: 'SwapForge',
+      });
+    return `https://coffee-defensive-hare-118.mypinata.cloud/ipfs/${result.cid}`;
   } catch (error) {
     console.log('Error uploading file to Pinata:', error);
     throw error;
