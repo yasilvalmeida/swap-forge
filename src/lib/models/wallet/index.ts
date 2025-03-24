@@ -21,7 +21,7 @@ export type TokenAccountDto = {
 
 export type WalletRequestDto = {
   walletAddress: string;
-  tokenAddress: string;
+  tokenPublicKey: string;
   referralCode?: string;
 };
 

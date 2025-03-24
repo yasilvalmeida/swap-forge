@@ -27,7 +27,7 @@ export default async function handler(
         .json({ error: 'Method not allowed' });
     }
 
-    const { walletAddress, tokenAddress, referralCode }: WalletRequestDto =
+    const { walletAddress, tokenPublicKey, referralCode }: WalletRequestDto =
       req.body;
 
     if (!walletAddress) {
@@ -65,23 +65,7 @@ export default async function handler(
       wallet = await database.collection<WalletDto>(WALLET_COLLECTION).findOne({
         walletAddress,
       });
-
-      if (wallet) {
-        await database.collection<TokenAccountDto>(TOKEN_COLLECTION).insertOne({
-          walletId: wallet?._id,
-          walletAddress: wallet?.publicAddress,
-          tokenPublicKey: tokenAddress,
-          createdAt: new Date(),
-        });
-      }
     } else {
-      await database.collection<TokenAccountDto>(TOKEN_COLLECTION).insertOne({
-        walletId: wallet?._id,
-        walletAddress: wallet?.publicAddress,
-        tokenPublicKey: tokenAddress,
-        createdAt: new Date(),
-      });
-
       await database.collection<WalletRequestDto>(WALLET_COLLECTION).updateOne(
         { walletAddress },
         {
@@ -89,6 +73,15 @@ export default async function handler(
         },
         { upsert: true }
       );
+    }
+
+    if (wallet) {
+      await database.collection<TokenAccountDto>(TOKEN_COLLECTION).insertOne({
+        walletId: wallet?._id,
+        walletAddress,
+        tokenPublicKey,
+        createdAt: new Date(),
+      });
     }
 
     return res

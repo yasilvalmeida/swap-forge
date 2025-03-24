@@ -3,13 +3,13 @@ import axios from 'axios';
 
 export const updateWallet = async (
   walletAddress: string,
-  mintAddress: string,
+  tokenPublicKey: string,
   referralCode?: string
 ) => {
   try {
     await axios.post('/api/wallet-update', {
       walletAddress,
-      mintAddress,
+      tokenPublicKey,
       referralCode,
     });
   } catch (error) {
