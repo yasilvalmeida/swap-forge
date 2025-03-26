@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import logo from '../../../../public/swap-forge.png';
 import { useRouter } from 'next/router';
 
 export default function Navbar() {
@@ -14,7 +13,12 @@ export default function Navbar() {
             href='/'
             className='flex flex-row items-center gap-2 text-2xl font-bold text-white'
           >
-            <Image alt='swap-forge-logo' src={logo} width={120} height={120} />
+            <Image
+              alt='swap-forge-logo'
+              src={'/images/swap-forge.png'}
+              width={120}
+              height={120}
+            />
             SwapForge
           </Link>
           <div className='hidden space-x-6 md:flex'>

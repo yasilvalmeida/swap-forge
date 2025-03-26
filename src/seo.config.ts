@@ -13,7 +13,7 @@ const SEO: DefaultSeoProps = {
       'SwapForge is the ultimate Solana dApp for token creation. Create Solana tokens in seconds with no coding required. Join our affiliate program today!',
     images: [
       {
-        url: 'https://swapforge.app/swap-forge.png',
+        url: 'https://swapforge.app/images/swap-forge.png',
         width: 1200,
         height: 630,
         alt: 'SwapForge - Create Solana Tokens Easily',
