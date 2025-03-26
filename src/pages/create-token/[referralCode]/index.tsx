@@ -84,12 +84,14 @@ interface SSRCreateTokenPageProps {
   swapForgeSecret: string;
   endpoint: string;
   promotionEndDate: string;
+  promotionDiscount: number;
   referralCode: string;
 }
 
 function CreateTokenPage({
   endpoint,
   promotionEndDate,
+  promotionDiscount,
   referralCode,
 }: SSRCreateTokenPageProps) {
   const [schema, setSchema] = useState<
@@ -156,13 +158,8 @@ function CreateTokenPage({
   const [open, setOpen] = useState<boolean>(false);
   const [tokenImageHover, setTokenImageHover] = useState<boolean>(false);
   const [token, setToken] = useState<string>('');
+  const [realPrice, setRealPrice] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string>('');
-
-  const promotionDiscount = useMemo(() => {
-    const today = dayjs();
-    const endDate = dayjs(promotionEndDate);
-    return today.isBefore(endDate) ? 0.5 : 0;
-  }, [promotionEndDate]);
 
   const computedTotalFee = useMemo(() => {
     let totalFee = 0;
@@ -180,9 +177,11 @@ function CreateTokenPage({
     }
     const sum = totalFee + CREATE_TOKEN_FEE;
     let computedTotalFee = Number(sum.toFixed(2));
+    setRealPrice(computedTotalFee);
     if (promotionDiscount > 0) {
       computedTotalFee =
         computedTotalFee - computedTotalFee * promotionDiscount;
+      computedTotalFee = Number(computedTotalFee.toFixed(2));
     }
     setValue('tokenFee', computedTotalFee);
     return computedTotalFee;
@@ -498,6 +497,7 @@ function CreateTokenPage({
         {promotionDiscount > 0 && (
           <PromotionCountdown
             endDate={promotionEndDate}
+            realPrice={realPrice}
             discount={promotionDiscount}
           />
         )}
@@ -1014,8 +1014,14 @@ function CreateTokenPage({
           </form>
           {tokenFee && (
             <span className='text-xs mt-3 text-center italic text-yellow-400'>
-              The cost of Token creation is {computedTotalFee} SOL, covering all
-              fees!.
+              The cost of Token creation is{' '}
+              <span className='line-through'>{realPrice}</span>{' '}
+              {computedTotalFee} SOL, covering all fees!.
+            </span>
+          )}
+          {promotionDiscount > 0 && (
+            <span className='text-xs mt-1 text-center italic text-yellow-400'>
+              Including Promotion Discount of {promotionDiscount * 100}%
             </span>
           )}
           {errorMessage && (
@@ -1105,11 +1111,18 @@ export const getServerSideProps: GetServerSideProps<
     };
   }
 
+  const promotionEndDate = process.env.PROMOTION_END_DATE || '';
+  const discount = Number(process.env.PROMOTION_DISCOUNT || 0);
+  const today = dayjs();
+  const endDate = dayjs(promotionEndDate);
+  const promotionDiscount = today.isBefore(endDate) ? discount : 0;
+
   return {
     props: {
       swapForgeSecret: process.env.SWAPFORGE_WALLET_SECRET || '',
       endpoint: process.env.SOLANA_ENDPOINT || '',
-      promotionEndDate: process.env.PROMOTION_END_DATE || '',
+      promotionEndDate,
+      promotionDiscount,
       referralCode,
     },
   };

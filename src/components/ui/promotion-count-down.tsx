@@ -1,6 +1,6 @@
 'use client'; // Required for client-side interactivity
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -11,11 +11,13 @@ dayjs.extend(relativeTime);
 
 interface IPromotionCountDownProps {
   endDate: string;
+  realPrice: number;
   discount: number;
 }
 
 export default function PromotionCountdown({
   endDate,
+  realPrice,
   discount,
 }: IPromotionCountDownProps) {
   const [timeLeft, setTimeLeft] = useState({
@@ -24,6 +26,11 @@ export default function PromotionCountdown({
     minutes: 0,
     seconds: 0,
   });
+
+  const tokenPrice = useMemo(() => {
+    const price = realPrice - realPrice * discount;
+    return price.toFixed(2);
+  }, [discount, realPrice]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -52,13 +59,18 @@ export default function PromotionCountdown({
       <h2 className='mb-2 text-xl font-bold'>
         🚨 FLASH PROMOTION: {discount * 100}% OFF! 🚨
       </h2>
-      <p className='text-lg mb-6 text-center text-indigo-200'>
+      <p className='text-lg mb-1 text-center text-indigo-200'>
         Hurry up
         <span className='font-semibold'>
           {' - '} offer expires {dayjs(endDate).format('dddd, MMMM D, YYYY')}!
         </span>
       </p>
-
+      <p className='text-lg text-center text-indigo-200'>
+        Create your own token
+      </p>
+      <p className='text-lg mb-6 text-center text-indigo-200'>
+        Just <span className='font-semibold'>{tokenPrice}SOL</span>
+      </p>
       <div className='flex flex-col items-center justify-center rounded-xl bg-slate-700 shadow-lg transition-shadow hover:shadow-xl'>
         <div className='mb-4 flex gap-3'>
           <div className='min-w-[70px] rounded-lg bg-red-100 p-3 text-center'>
