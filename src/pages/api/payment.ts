@@ -18,6 +18,7 @@ import {
 import { getConnection } from '@/lib/utils/token';
 import dotenv from 'dotenv';
 import bs58 from 'bs58';
+import { partnerWallets } from '@/lib/constants/partner';
 
 dotenv.config();
 
@@ -62,15 +63,26 @@ export default async function handler(
 
     const swapForgeAuthority = Keypair.fromSecretKey(bs58.decode(privateKey));
 
+    const swapForgeFee = tokenFee * 0.8;
+    const hashHavenFee = tokenFee * 0.2;
     // Create payment instruction
-    const transferFeesInstruction = SystemProgram.transfer({
+    const transferFeesSwapForgeInstruction = SystemProgram.transfer({
       fromPubkey: wallet,
       toPubkey: swapForgeAuthority.publicKey,
-      lamports: LAMPORTS_PER_SOL * tokenFee,
+      lamports: LAMPORTS_PER_SOL * swapForgeFee,
+    });
+    const transferFeesHashHavenInstruction = SystemProgram.transfer({
+      fromPubkey: wallet,
+      toPubkey: new PublicKey(partnerWallets.hashHaven),
+      lamports: LAMPORTS_PER_SOL * hashHavenFee,
     });
 
     /* Start Transfer fee from Wallet to Swap Forge Wallet */
-    const transactions = new Transaction().add(transferFeesInstruction);
+    const transactions = new Transaction().add(
+      transferFeesSwapForgeInstruction
+    );
+    /* Start Transfer fee from Wallet to HashHaven Wallet */
+    transactions.add(transferFeesHashHavenInstruction);
 
     const { blockhash } = await connection.getLatestBlockhash();
 
