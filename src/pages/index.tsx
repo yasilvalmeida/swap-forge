@@ -1,10 +1,38 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { TimeRangeDTO, TokenWalletStatsDto } from '@/lib/models/stats';
+import {
+  TOKEN_COLLECTION,
+  TokenAccountDto,
+  WALLET_COLLECTION,
+  WalletDto,
+} from '@/lib/models/wallet';
+import { database } from '@/lib/mongodb';
+import { GetServerSideProps } from 'next';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import StatsChart from '@/components/ui/stats-chart';
 
 const Header = dynamic(() => import('@/components/layout/header'), {});
 const Footer = dynamic(() => import('@/components/layout/footer'), {});
 
-export default function Home() {
+interface SSRHomePageProps {
+  totalWallets: number;
+  totalTokens: number;
+  totalTransactions: number;
+  totalLiquidity: number;
+  tokenAccounts: TokenWalletStatsDto[];
+}
+
+const HomePage = ({
+  totalWallets,
+  totalTokens,
+  totalTransactions,
+  totalLiquidity,
+  tokenAccounts,
+}: SSRHomePageProps) => {
+  const [timeRange, setTimeRange] = useState<TimeRangeDTO>('90D');
+
   return (
     <div className='min-h-screen bg-gray-900 text-white'>
       <Header isLanding={true} />
@@ -173,7 +201,91 @@ export default function Home() {
         </div>
       </section>
 
-      <section className='bg-gradient-to-r from-purple-800 to-indigo-900 px-4 py-20'>
+      <section className='bg-gray-800 px-4 py-20'>
+        <div className='mx-auto max-w-6xl'>
+          <h2 className='mb-12 text-center text-3xl font-bold'>
+            Platform Statistics
+          </h2>
+          <div className='grid grid-cols-1 gap-8 md:grid-cols-4'>
+            {/* Total Wallets */}
+            <div className='rounded-lg bg-gray-700 p-6 text-center shadow-lg'>
+              <div className='text-5xl font-bold text-yellow-400'>
+                {totalWallets}+
+              </div>
+              <div className='text-lg mt-2 font-semibold'>Total Wallets</div>
+              <div className='mt-2 text-sm text-gray-400'>
+                Connected to SwapForge
+              </div>
+              {/* <div className='text-xs mt-4 text-green-400'>
+                ↑ 12.5% last 30 days
+              </div> */}
+            </div>
+
+            {/* Tokens Created */}
+            <div className='rounded-lg bg-gray-700 p-6 text-center shadow-lg'>
+              <div className='text-5xl font-bold text-yellow-400'>
+                {totalTokens}+
+              </div>
+              <div className='text-lg mt-2 font-semibold'>Tokens Created</div>
+              <div className='mt-2 text-sm text-gray-400'>On our platform</div>
+              {/* <div className='text-xs mt-4 text-green-400'>
+                ↑ 8.2% last 30 days
+              </div> */}
+            </div>
+
+            {/* Daily Transactions */}
+            <div className='rounded-lg bg-gray-700 p-6 text-center shadow-lg'>
+              <div className='text-5xl font-bold text-yellow-400'>
+                {totalTransactions}
+              </div>
+              <div className='text-lg mt-2 font-semibold'>
+                Daily Transactions
+              </div>
+              <div className='mt-2 text-sm text-gray-400'>Processed</div>
+              {/* <div className='text-xs mt-4 text-green-400'>
+                ↑ 5.3% last 30 days
+              </div> */}
+            </div>
+
+            {/* Liquidity Pools */}
+            <div className='rounded-lg bg-gray-700 p-6 text-center shadow-lg'>
+              <div className='text-5xl font-bold text-yellow-400'>
+                {totalLiquidity}
+              </div>
+              <div className='text-lg mt-2 font-semibold'>Liquidity Pools</div>
+              <div className='mt-2 text-sm text-gray-400'>Created</div>
+              {/* <div className='text-xs mt-4 text-green-400'>
+                ↑ 15.1% last 30 days
+              </div> */}
+            </div>
+          </div>
+
+          {/* Time-based chart (placeholder - you would integrate with a charting library) */}
+          <div className='mt-12 rounded-lg bg-gray-700 p-6 shadow-lg'>
+            <h3 className='mb-4 text-xl font-semibold'>Growth Over Time</h3>
+            <div className='h-64 rounded bg-gray-900 p-4'>
+              <StatsChart tokenAcounts={tokenAccounts} timeRange={timeRange} />
+            </div>
+            <div className='mt-4 flex justify-center gap-4 text-sm'>
+              {['7D', '30D', '90D', '1Y'].map((range) => (
+                <Button
+                  key={range}
+                  onClick={() => setTimeRange(range as TimeRangeDTO)}
+                  className={`rounded px-3 py-1 ${
+                    timeRange === range
+                      ? 'bg-yellow-400 text-gray-900'
+                      : 'bg-gray-600 hover:bg-gray-500'
+                  }`}
+                >
+                  {range}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className='bg-gray-800 px-4 py-20'>
         <div className='mx-auto max-w-4xl text-center'>
           <h2 className='mb-8 text-3xl font-bold'>Ready to Get Started?</h2>
           <p className='mb-8 text-xl'>
@@ -218,4 +330,41 @@ export default function Home() {
       <Footer />
     </div>
   );
-}
+};
+
+export const getServerSideProps: GetServerSideProps<
+  SSRHomePageProps
+> = async () => {
+  const wallets = await database
+    .collection<WalletDto>(WALLET_COLLECTION)
+    .find({})
+    .toArray();
+
+  const tokens = await database
+    .collection<TokenAccountDto>(TOKEN_COLLECTION)
+    .find({})
+    .toArray();
+
+  const tokenAccounts = tokens?.map((token) => ({
+    wallet: token.walletAddress,
+    token: token.tokenPublicKey,
+    createdAt: token.createdAt.toISOString(),
+  }));
+  
+  const totalWallets = wallets.length;
+  const totalTokens = tokens?.length;
+  const totalTransactions = 0;
+  const totalLiquidity = 0;
+
+  return {
+    props: {
+      totalWallets,
+      totalTokens,
+      totalTransactions,
+      totalLiquidity,
+      tokenAccounts,
+    },
+  };
+};
+
+export default HomePage;
