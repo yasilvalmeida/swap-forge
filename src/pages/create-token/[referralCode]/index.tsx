@@ -23,6 +23,9 @@ import {
   MAX_LOGO_WIDTH,
   MAX_TAGS,
   RAYDIUM_LIQUIDITY_URL,
+  REVOKE_FREEZE_FEE,
+  REVOKE_MINT_FEE,
+  REVOKE_UPDATE_FEE,
   TOKEN_NAME_MAX_CHARS,
   TOKEN_SYMBOL_MAX_CHARS,
 } from '@/libs/constants/token';
@@ -147,7 +150,25 @@ function CreateTokenPage({
     publicKey!,
     sendTransaction!,
     signTransaction!),
-  [publicKey, sendTransaction, signTransaction])
+    [publicKey, sendTransaction, signTransaction])
+  
+  useMemo(() => {
+    let totalFee = CREATE_TOKEN_FEE;
+    if (revokeMint) {
+      const sum = totalFee + REVOKE_MINT_FEE;
+      totalFee = Number(sum.toFixed(2));
+    }
+    if (revokeFreeze) {
+      const sum = totalFee + REVOKE_FREEZE_FEE;
+      totalFee = Number(sum.toFixed(2));
+    }
+    if (immutable) {
+      const sum = totalFee + REVOKE_UPDATE_FEE;
+      totalFee = Number(sum.toFixed(2));
+    }
+    const sum = totalFee;
+    setValue('tokenFee', sum);
+  }, [immutable, revokeFreeze, revokeMint, setValue]);
 
   const onFileUpload = useCallback(
     async (file?: File) => {
@@ -664,7 +685,7 @@ function CreateTokenPage({
                 </div>
                 {revokeMint && (
                   <span className='text-xs text-yellow-400'>
-                    Free
+                    {REVOKE_MINT_FEE} SOL
                   </span>
                 )}
               </div>
@@ -704,7 +725,7 @@ function CreateTokenPage({
                 </div>
                 {revokeFreeze && (
                   <span className='text-xs text-yellow-400'>
-                    Free
+                    {REVOKE_FREEZE_FEE} SOL
                   </span>
                 )}
               </div>
@@ -741,7 +762,7 @@ function CreateTokenPage({
                 </div>
                 {immutable && (
                   <span className='text-xs text-yellow-400'>
-                    Free
+                    {REVOKE_UPDATE_FEE} SOL
                   </span>
                 )}
               </div>
