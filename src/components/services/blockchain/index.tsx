@@ -1,7 +1,7 @@
 import { AnchorProvider, BN, Program, Wallet } from '@coral-xyz/anchor';
 import { SendTransactionOptions } from "@solana/wallet-adapter-base";
 import { Connection, PublicKey, SystemProgram, Transaction, TransactionSignature, VersionedTransaction } from "@solana/web3.js";
-import { TOKEN_METADATA_PROGRAM_ID } from '@/libs/constants/create-token';
+import { TOKEN_METADATA_PROGRAM_ID } from '@/libs/constants/token';
 import * as anchor from '@coral-xyz/anchor';
 import { TokenContract } from '../../../../smart-contract/token/types/token_contract';
 import idl from '../../../../smart-contract/token/idl/token_contract.json';

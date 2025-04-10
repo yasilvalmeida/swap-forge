@@ -25,7 +25,7 @@ import {
   RAYDIUM_LIQUIDITY_URL,
   TOKEN_NAME_MAX_CHARS,
   TOKEN_SYMBOL_MAX_CHARS,
-} from '@/libs/constants/create-token';
+} from '@/libs/constants/token';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CreateTokenFormData } from '@/libs/validation/create-token';

@@ -1,7 +1,7 @@
 import {
   MAX_LOGO_HEIGHT,
   MAX_LOGO_WIDTH,
-} from '@/libs/constants/create-token/index';
+} from '@/libs/constants/token/index';
 import { NextApiRequest, NextApiResponse } from 'next';
 import {
   ResizeImageRequestDto,
