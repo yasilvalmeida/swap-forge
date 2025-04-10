@@ -1,4 +1,4 @@
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,8 +15,7 @@ import {
   copyToClipboard,
   formatNumber,
   getImageDimensions,
-  removeFormatting,
-} from '@/lib/utils';
+} from '@/libs/utils';
 import {
   CREATE_TOKEN_FEE,
   IMMUTABLE_FEE,
@@ -29,10 +28,10 @@ import {
   REVOKE_MINT_FEE,
   TOKEN_NAME_MAX_CHARS,
   TOKEN_SYMBOL_MAX_CHARS,
-} from '@/lib/constants/create-token';
+} from '@/libs/constants/create-token';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CreateTokenFormData } from '@/lib/validation/create-token';
+import { CreateTokenFormData } from '@/libs/validation/create-token';
 import { DragAndDrop } from '@/components/ui/drag-and-drop';
 import { TagsInput } from '@/components/ui/tags-input';
 import {
@@ -45,9 +44,8 @@ import {
   AlignVerticalDistributeEnd,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { ErrorResponseDto } from '@/lib/models';
+import { ErrorResponseDto } from '@/libs/models';
 import axios, { AxiosError } from 'axios';
-import useConnection from '@/components/hook/token';
 import {
   Dialog,
   DialogContent,
@@ -57,20 +55,17 @@ import {
 } from '@radix-ui/react-dialog';
 import Spinner from '@/components/ui/spinner';
 import { DialogFooter, DialogHeader } from '@/components/ui/dialog';
-import { LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { deserializeTransaction } from '@/lib/utils/token';
 import {
-  CreateTokenResponseDto,
   ResizeImageResponseDto,
-} from '@/lib/models/token';
+  StoreTokenMetadaResponseDto,
+} from '@/libs/models/token';
 import { WalletSendTransactionError } from '@solana/wallet-adapter-base';
-import { PaymentResponseDto } from '@/lib/models/payment';
-import { getSumOfReferrals, updateWallet } from '@/lib/utils/wallet';
-import { GetServerSideProps } from 'next';
+import { updateWallet } from '@/libs/utils/wallet';
 import FrequentAnswersAndQuestions from '@/components/layout/frequent-answer-question';
 import PromotionCountdown from '@/components/ui/promotion-count-down';
 import dotenv from 'dotenv';
-import dayjs from 'dayjs';
+import { createTokenFromContract, getProvider } from '@/components/services/blockchain';
+import { BN } from '@coral-xyz/anchor';
 
 dotenv.config();
 
@@ -78,19 +73,9 @@ const Navbar = dynamic(() => import('@/components/layout/navbar'), {});
 const Header = dynamic(() => import('@/components/layout/header'), {});
 const Footer = dynamic(() => import('@/components/layout/footer'), {});
 
-interface SSRCreateTokenPageProps {
-  endpoint: string;
-  promotionEndDate: string;
-  promotionDiscount: number;
-}
-
-function CreateTokenPage({
-  endpoint,
-  promotionEndDate,
-  promotionDiscount,
-}: SSRCreateTokenPageProps) {
+function CreateTokenPage() {
   const [schema, setSchema] = useState<
-    typeof import('@/lib/validation/create-token').createTokenFormSchema | null
+    typeof import('@/libs/validation/create-token').createTokenFormSchema | null
   >(null);
 
   const {
@@ -131,8 +116,7 @@ function CreateTokenPage({
     mode: 'onChange',
   });
 
-  const { connected, publicKey, sendTransaction } = useWallet();
-  const { connection } = useConnection(endpoint);
+  const { connected, publicKey, sendTransaction, signTransaction } = useWallet();
 
   const tokenName = watch('tokenName');
   const tokenSymbol = watch('tokenSymbol');
@@ -148,50 +132,17 @@ function CreateTokenPage({
   const [title, setTitle] = useState<string>(
     'Creating your token, please be patient!'
   );
-  const [paymentSignature, setPaymentSignature] = useState<string>();
-  const [createSignature, setCreateSignature] = useState<string>();
+  const [signature, setSignature] = useState<string>();
   const [open, setOpen] = useState<boolean>(false);
   const [tokenImageHover, setTokenImageHover] = useState<boolean>(false);
   const [token, setToken] = useState<string>('');
-  const [discount, setDiscount] = useState<number>(0);
-  const [realPrice, setRealPrice] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
-  const computedTotalFee = useMemo(() => {
-    let totalFee = 0;
-    if (revokeMint) {
-      const sum = totalFee + REVOKE_MINT_FEE;
-      totalFee = Number(sum.toFixed(2));
-    }
-    if (revokeFreeze) {
-      const sum = totalFee + REVOKE_FREEZE_FEE;
-      totalFee = Number(sum.toFixed(2));
-    }
-    if (immutable) {
-      const sum = totalFee + IMMUTABLE_FEE;
-      totalFee = Number(sum.toFixed(2));
-    }
-    const sum = totalFee + CREATE_TOKEN_FEE;
-    let computedTotalFee = Number(sum.toFixed(2));
-    if (discount > 0) {
-      computedTotalFee = computedTotalFee - computedTotalFee * discount;
-    }
-    setRealPrice(computedTotalFee);
-    if (promotionDiscount > 0) {
-      computedTotalFee =
-        computedTotalFee - computedTotalFee * promotionDiscount;
-      computedTotalFee = Number(computedTotalFee.toFixed(2));
-    }
-    setValue('tokenFee', computedTotalFee);
-    return computedTotalFee;
-  }, [
-    discount,
-    immutable,
-    revokeFreeze,
-    revokeMint,
-    promotionDiscount,
-    setValue,
-  ]);
+  const program = useMemo(() => getProvider(
+    publicKey!,
+    sendTransaction!,
+    signTransaction!),
+  [publicKey, sendTransaction, signTransaction]);
 
   const onFileUpload = useCallback(
     async (file?: File) => {
@@ -221,7 +172,7 @@ function CreateTokenPage({
         if (checkDimensionCondition) {
           tokenLogoBase64 = await convertFileToBase64(file);
           const resizeImageResponse = await axios.post<ResizeImageResponseDto>(
-            '/api/token-resize-image',
+            '/api/token/image/resize',
             {
               tokenLogoBase64,
             }
@@ -294,62 +245,58 @@ function CreateTokenPage({
           return;
         }
 
-        const walletBalance = await connection.getBalance(publicKey);
-
-        if (walletBalance / LAMPORTS_PER_SOL < tokenFee) {
-          toast.warn('Insufficient Balance!');
+        if (!program) {
+          toast.error('No program initialized');
+          return;
         }
-
-        const paymentResponse = await axios.post<PaymentResponseDto>(
-          '/api/payment',
-          {
-            walletPublicKey: publicKey,
-            tokenFee,
-          }
-        );
-        const { serializedTransaction } = paymentResponse.data;
-
-        const transaction = deserializeTransaction(serializedTransaction);
-
-        let signature = await sendTransaction(transaction, connection, {
-          signers: [],
-        });
-
-        if (!signature) {
-          toast.error('Transfer failed!');
-          throw Error();
-        }
-        let signatureUrl = `https://solscan.io/tx/${signature}`;
-        setPaymentSignature(signatureUrl);
 
         setTitle('Creating your token, please be patient!');
-        setCreateSignature('');
+        setSignature('');
         setToken('');
         setLoading(true);
         setOpen(true);
 
-        const createTokenResponse = await axios.post<CreateTokenResponseDto>(
-          '/api/token-create',
-          {
-            ...createTokenFormData,
-            tokenSupply: removeFormatting(createTokenFormData.tokenSupply),
-            walletPublicKey: publicKey,
-          }
+        const storeTokenMetadataResponse = await axios.post<StoreTokenMetadaResponseDto>(
+          '/api/token/metadata/create',
+          createTokenFormData
         );
-        signature = createTokenResponse.data.signature;
-        const { mintPublicKey } = createTokenResponse.data;
-        setToken(mintPublicKey);
-        setLoading(false);
-        if (signature) {
-          signatureUrl = `https://solscan.io/tx/${signature}`;
-          setCreateSignature(signatureUrl);
-          updateWallet(publicKey.toBase58(), mintPublicKey);
-          reset();
-          toast.success('Your token has been created!');
-          setTitle('Successful');
-        } else {
-          toast.error('Failed to create token, try again!');
+        const { uri } = storeTokenMetadataResponse.data;
+
+        const {
+          tokenName,
+          tokenSymbol,
+          tokenDecimals,
+          tokenSupply,
+          revokeMint,
+          revokeFreeze,
+          immutable
+        } = createTokenFormData;
+
+        const {tx, mint} = await createTokenFromContract(
+          program,
+          publicKey,
+          tokenName,
+          tokenSymbol,
+          Number(tokenDecimals),
+          new BN(tokenSupply),
+          uri,
+          revokeMint,
+          revokeFreeze,
+          immutable
+        )
+
+        if (!tx) {
+          toast.error('Create token failed!');
+          throw Error('Create token failed!');
         }
+        const signature = `https://solscan.io/tx/${tx}`;
+        setSignature(signature);
+        setToken(mint);
+        updateWallet(publicKey.toBase58(), mint);
+        reset();
+        toast.success('Your token has been created!');
+        setTitle('Successful');
+        setLoading(false);
       } catch (error) {
         if (error instanceof WalletSendTransactionError) {
           if (error.message.includes('User rejected the request')) {
@@ -365,32 +312,21 @@ function CreateTokenPage({
         } else {
           toast.error('Transaction failed. Please try again.');
         }
+        setOpen(false)
         setLoading(false);
       }
     },
-    [connected, connection, publicKey, reset, sendTransaction, tokenFee]
+    [connected, program, publicKey, reset]
   );
 
   useEffect(() => {
-    import('@/lib/validation/create-token').then((module) => {
+    import('@/libs/validation/create-token').then((module) => {
       setSchema(module.createTokenFormSchema);
     });
   }, []);
 
-  useEffect(() => {
-    getDiscount();
-    return () => {};
-
-    async function getDiscount() {
-      if (publicKey) {
-        const discount = (await getSumOfReferrals(publicKey.toBase58())) || 0;
-        setDiscount(discount);
-      }
-    }
-  }, [connection, publicKey]);
-
   return (
-    <div className='min-h-screen bg-gray-900 text-white'>
+    <div className='min-h-screen text-white bg-gray-900'>
       <Header
         isLanding={false}
         title='Create Your Token'
@@ -412,7 +348,7 @@ function CreateTokenPage({
               <DialogTitle className='text-gray-300'>{title}</DialogTitle>
             </DialogHeader>
             {token && (
-              <div className='my-8 flex items-center space-x-2'>
+              <div className='flex items-center my-8 space-x-2'>
                 <div className='grid flex-1 gap-2'>
                   <Label htmlFor='token' className='sr-only'>
                     Token
@@ -427,7 +363,7 @@ function CreateTokenPage({
                     toast.success('Token copied!');
                   }}
                   size='sm'
-                  className='cursor-pointer px-3'
+                  className='px-3 cursor-pointer'
                 >
                   <span className='sr-only'>Copy</span>
                   <Copy />
@@ -436,28 +372,14 @@ function CreateTokenPage({
             )}
 
             <div className='flex flex-col gap-4'>
-              {paymentSignature && (
+              {signature && (
                 <div className='flex justify-center'>
                   <Link
-                    href={paymentSignature || ''}
+                    href={signature || ''}
                     target='_blank'
                     className='cursor-pointer'
                   >
-                    <span className='text-xs flex items-center gap-1 text-yellow-400 underline'>
-                      <LinkIcon className='h-4' /> View payment signature on
-                      Solscan
-                    </span>
-                  </Link>
-                </div>
-              )}
-              {createSignature && (
-                <div className='flex justify-center'>
-                  <Link
-                    href={createSignature || ''}
-                    target='_blank'
-                    className='cursor-pointer'
-                  >
-                    <span className='text-xs flex items-center gap-1 text-yellow-400 underline'>
+                    <span className='flex items-center gap-1 text-xs text-yellow-400 underline'>
                       <LinkIcon className='h-4' /> View create token signature
                       on Solscan
                     </span>
@@ -472,7 +394,7 @@ function CreateTokenPage({
                     target='_blank'
                     className='cursor-pointer'
                   >
-                    <span className='text-xs flex items-center gap-1 text-yellow-400 underline'>
+                    <span className='flex items-center gap-1 text-xs text-yellow-400 underline'>
                       <AlignVerticalDistributeEnd className='h-4' /> Create
                       Liquidity Pool on Raydium
                     </span>
@@ -501,7 +423,7 @@ function CreateTokenPage({
         <WalletButton />
       </div>
 
-      <div className='mx-auto flex justify-center py-4'>
+      {/* <div className='flex justify-center py-4 mx-auto'>
         {promotionDiscount > 0 && (
           <PromotionCountdown
             endDate={promotionEndDate}
@@ -509,20 +431,20 @@ function CreateTokenPage({
             discount={promotionDiscount}
           />
         )}
-      </div>
+      </div> */}
 
       {/* Token Creation Form */}
-      <div className='mx-auto flex max-w-6xl flex-col gap-6 px-4 py-20 md:flex-row'>
-        <div className='order-2 flex flex-col md:order-1 md:w-2/3'>
-          <h1 className='mb-8 text-center text-4xl font-bold'>
+      <div className='flex flex-col max-w-6xl gap-6 px-4 py-20 mx-auto md:flex-row'>
+        <div className='flex flex-col order-2 md:order-1 md:w-2/3'>
+          <h1 className='mb-8 text-4xl font-bold text-center'>
             Create Your Token
           </h1>
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className='border-1 flex flex-col rounded border-gray-500 p-3'
+            className='flex flex-col p-3 border-gray-500 rounded border-1'
           >
-            <div className='flex w-full flex-col justify-between gap-3 md:flex-row'>
-              <div className='flex w-full flex-col gap-1'>
+            <div className='flex flex-col justify-between w-full gap-3 md:flex-row'>
+              <div className='flex flex-col w-full gap-1'>
                 <Label htmlFor='tokenName'>
                   Name <span className='text-red-500'>*</span>
                 </Label>
@@ -532,7 +454,7 @@ function CreateTokenPage({
                   {...register('tokenName')}
                   placeholder='Enter token name'
                 />
-                <div className='text-xs flex flex-row justify-between text-center italic'>
+                <div className='flex flex-row justify-between text-xs italic text-center'>
                   <span className='text-red-400'>
                     {errors.tokenName && <p>{errors.tokenName.message}</p>}
                   </span>
@@ -542,7 +464,7 @@ function CreateTokenPage({
                 </div>
               </div>
 
-              <div className='flex w-full flex-col gap-1'>
+              <div className='flex flex-col w-full gap-1'>
                 <Label htmlFor='tokenSymbol'>
                   Symbol <span className='text-red-500'>*</span>
                 </Label>
@@ -556,12 +478,12 @@ function CreateTokenPage({
                         const transformed = e.target.value.toUpperCase().trim();
                         field.onChange(transformed);
                       }}
-                      className='placeholder:text-muted-foreground h-9 w-full rounded-lg bg-gray-700 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400'
+                      className='w-full p-3 text-sm bg-gray-700 rounded-lg placeholder:text-muted-foreground h-9 focus:outline-none focus:ring-2 focus:ring-yellow-400'
                       placeholder='Enter token symbol'
                     />
                   )}
                 />
-                <div className='text-xs flex flex-row justify-between text-center italic'>
+                <div className='flex flex-row justify-between text-xs italic text-center'>
                   <span className='text-red-400'>
                     {errors.tokenSymbol && <p>{errors.tokenSymbol.message}</p>}
                   </span>
@@ -572,8 +494,8 @@ function CreateTokenPage({
               </div>
             </div>
 
-            <div className='flex w-full flex-col justify-between gap-3 md:flex-row'>
-              <div className='flex w-full flex-col gap-1'>
+            <div className='flex flex-col justify-between w-full gap-3 md:flex-row'>
+              <div className='flex flex-col w-full gap-1'>
                 <Label htmlFor='tokenDecimals'>
                   Decimals <span className='text-red-500'>*</span>
                 </Label>
@@ -588,19 +510,19 @@ function CreateTokenPage({
                         const formattedValue = formatNumber(e.target.value);
                         field.onChange(formattedValue);
                       }}
-                      className='h-9 w-full rounded-lg bg-gray-700 p-3 text-right focus:outline-none focus:ring-2 focus:ring-yellow-400'
+                      className='w-full p-3 text-right bg-gray-700 rounded-lg h-9 focus:outline-none focus:ring-2 focus:ring-yellow-400'
                       placeholder='Enter token decimals'
                     />
                   )}
                 />
                 {errors.tokenDecimals && (
-                  <p className='text-xs text-left italic text-red-400'>
+                  <p className='text-xs italic text-left text-red-400'>
                     {errors.tokenDecimals.message}
                   </p>
                 )}
               </div>
 
-              <div className='flex w-full flex-col gap-1'>
+              <div className='flex flex-col w-full gap-1'>
                 <Label htmlFor='tokenSupply'>
                   Token Supply <span className='text-red-500'>*</span>
                 </Label>
@@ -617,21 +539,21 @@ function CreateTokenPage({
                         // Update the field value
                         field.onChange(formattedValue);
                       }}
-                      className='h-9 w-full rounded-lg bg-gray-700 p-3 text-right focus:outline-none focus:ring-2 focus:ring-yellow-400'
+                      className='w-full p-3 text-right bg-gray-700 rounded-lg h-9 focus:outline-none focus:ring-2 focus:ring-yellow-400'
                       placeholder='Enter token symbol'
                     />
                   )}
                 />
                 {errors.tokenSupply && (
-                  <p className='text-xs text-left italic text-red-400'>
+                  <p className='text-xs italic text-left text-red-400'>
                     {errors.tokenSupply.message}
                   </p>
                 )}
               </div>
             </div>
 
-            <div className='mt-3 flex w-full flex-col justify-between gap-3 md:flex-row'>
-              <div className='flex w-1/3 flex-col gap-1'>
+            <div className='flex flex-col justify-between w-full gap-3 mt-3 md:flex-row'>
+              <div className='flex flex-col w-1/3 gap-1'>
                 <Label htmlFor='tokenLogo'>
                   Token Logo <span className='text-red-500'>*</span>
                 </Label>
@@ -644,7 +566,7 @@ function CreateTokenPage({
                     {tokenImageHover && (
                       <XCircle
                         onClick={onRemoveTokenLogo}
-                        className='absolute right-4 top-1 h-4 w-4 cursor-pointer text-gray-400 hover:text-yellow-400'
+                        className='absolute w-4 h-4 text-gray-400 cursor-pointer right-4 top-1 hover:text-yellow-400'
                       />
                     )}
                     <Image
@@ -665,7 +587,7 @@ function CreateTokenPage({
                 )}
               </div>
 
-              <div className='flex w-full flex-col gap-1'>
+              <div className='flex flex-col w-full gap-1'>
                 <Label htmlFor='tokenDescription'>
                   Token Description <span className='text-red-500'>*</span>
                 </Label>
@@ -675,7 +597,7 @@ function CreateTokenPage({
                   className='h-40'
                   placeholder='Type your message here.'
                 />
-                <div className='text-xs flex flex-row justify-between text-center italic'>
+                <div className='flex flex-row justify-between text-xs italic text-center'>
                   <span className='text-red-400'>
                     {errors.tokenDescription && (
                       <p>{errors.tokenDescription.message}</p>
@@ -685,8 +607,8 @@ function CreateTokenPage({
               </div>
             </div>
 
-            <div className='mt-3 flex w-full flex-col justify-between gap-3 md:flex-row'>
-              <div className='flex w-full flex-col gap-1'>
+            <div className='flex flex-col justify-between w-full gap-3 mt-3 md:flex-row'>
+              <div className='flex flex-col w-full gap-1'>
                 <Label htmlFor='tokenLogo'>
                   Token Tags (Max {MAX_TAGS - 1})
                 </Label>
@@ -709,12 +631,12 @@ function CreateTokenPage({
               </div>
             </div>
 
-            <h2 className='mb-2 mt-3 flex items-center gap-2 text-xl text-gray-200'>
-              <Shield className='h-8 w-8' /> Additional settings
+            <h2 className='flex items-center gap-2 mt-3 mb-2 text-xl text-gray-200'>
+              <Shield className='w-8 h-8' /> Additional settings
             </h2>
 
-            <div className='mb-6 flex w-full flex-col justify-between gap-2'>
-              <div className='flex w-full flex-row items-center justify-between'>
+            <div className='flex flex-col justify-between w-full gap-2 mb-6'>
+              <div className='flex flex-row items-center justify-between w-full'>
                 <div className='flex flex-row items-center gap-1'>
                   <Controller
                     name='revokeMint'
@@ -728,21 +650,21 @@ function CreateTokenPage({
                   />
                   <Label
                     htmlFor='revokeMint'
-                    className='text block font-medium'
+                    className='block font-medium text'
                   >
                     Revoke Mint Authority
                   </Label>
                 </div>
                 {revokeMint && (
                   <span className='text-xs text-yellow-400'>
-                    {REVOKE_MINT_FEE} SOL
+                    Free
                   </span>
                 )}
               </div>
 
               {revokeMint && (
                 <Alert>
-                  <Shield className='h-4 w-4' />
+                  <Shield className='w-4 h-4' />
                   <AlertTitle className='text-xs'>Recommend!</AlertTitle>
                   <AlertDescription className='text-xs'>
                     Revoke right to mint new coins, this shows buyer of your
@@ -753,8 +675,8 @@ function CreateTokenPage({
               )}
             </div>
 
-            <div className='mb-6 flex w-full flex-col justify-between gap-2'>
-              <div className='flex w-full flex-row items-center justify-between'>
+            <div className='flex flex-col justify-between w-full gap-2 mb-6'>
+              <div className='flex flex-row items-center justify-between w-full'>
                 <div className='flex flex-row items-center gap-1'>
                   <Controller
                     name='revokeFreeze'
@@ -768,21 +690,21 @@ function CreateTokenPage({
                   />
                   <Label
                     htmlFor='revokeFreeze'
-                    className='text block font-medium'
+                    className='block font-medium text'
                   >
                     Revoke Freeze Authority
                   </Label>
                 </div>
                 {revokeFreeze && (
                   <span className='text-xs text-yellow-400'>
-                    {REVOKE_FREEZE_FEE} SOL
+                    Free
                   </span>
                 )}
               </div>
 
               {revokeFreeze && (
                 <Alert>
-                  <Shield className='h-4 w-4' />
+                  <Shield className='w-4 h-4' />
                   <AlertTitle className='text-xs'>Recommend!</AlertTitle>
                   <AlertDescription className='text-xs'>
                     Revoke freeze right, you will make coin safer for potential
@@ -793,8 +715,8 @@ function CreateTokenPage({
               )}
             </div>
 
-            <div className='mb-6 flex w-full flex-col justify-between gap-1'>
-              <div className='flex w-full flex-row items-center justify-between gap-2'>
+            <div className='flex flex-col justify-between w-full gap-1 mb-6'>
+              <div className='flex flex-row items-center justify-between w-full gap-2'>
                 <div className='flex flex-row items-center gap-1'>
                   <Controller
                     name='immutable'
@@ -806,20 +728,20 @@ function CreateTokenPage({
                       />
                     )}
                   />
-                  <Label htmlFor='immutable' className='text block font-medium'>
+                  <Label htmlFor='immutable' className='block font-medium text'>
                     Revoke Update
                   </Label>
                 </div>
                 {immutable && (
                   <span className='text-xs text-yellow-400'>
-                    {IMMUTABLE_FEE} SOL
+                    Free
                   </span>
                 )}
               </div>
 
               {immutable && (
                 <Alert>
-                  <Shield className='h-4 w-4' />
+                  <Shield className='w-4 h-4' />
                   <AlertTitle className='text-xs'>Recommend!</AlertTitle>
                   <AlertDescription className='text-xs'>
                     If your token is immutable it means you will not be able to
@@ -829,8 +751,8 @@ function CreateTokenPage({
               )}
             </div>
 
-            <div className='mb-6 flex w-full flex-col justify-between gap-1'>
-              <div className='flex w-full flex-row items-center justify-between gap-2'>
+            <div className='flex flex-col justify-between w-full gap-1 mb-6'>
+              <div className='flex flex-row items-center justify-between w-full gap-2'>
                 <div className='flex flex-row items-center gap-1'>
                   <Controller
                     name='customCreatorInfo'
@@ -852,8 +774,8 @@ function CreateTokenPage({
               </div>
 
               {customCreatorInfo && (
-                <div className='flex w-full flex-col justify-between gap-3 md:flex-row'>
-                  <div className='flex w-full flex-col gap-1'>
+                <div className='flex flex-col justify-between w-full gap-3 md:flex-row'>
+                  <div className='flex flex-col w-full gap-1'>
                     <Label htmlFor='creatorName'>
                       Creator Name <span className='text-red-500'>*</span>
                     </Label>
@@ -863,7 +785,7 @@ function CreateTokenPage({
                       {...register('creatorName')}
                       placeholder='Customize creator name'
                     />
-                    <div className='text-xs flex flex-row justify-between text-center italic'>
+                    <div className='flex flex-row justify-between text-xs italic text-center'>
                       <span className='text-red-400'>
                         {errors.creatorName && (
                           <p>{errors.creatorName.message}</p>
@@ -872,7 +794,7 @@ function CreateTokenPage({
                     </div>
                   </div>
 
-                  <div className='flex w-full flex-col gap-1'>
+                  <div className='flex flex-col w-full gap-1'>
                     <Label htmlFor='creatorWebsite'>
                       Creator Website <span className='text-red-500'>*</span>
                     </Label>
@@ -882,7 +804,7 @@ function CreateTokenPage({
                       {...register('creatorWebsite')}
                       placeholder='Enter token symbol'
                     />
-                    <div className='text-xs flex flex-row justify-between text-center italic'>
+                    <div className='flex flex-row justify-between text-xs italic text-center'>
                       <span className='text-red-400'>
                         {errors.creatorWebsite && (
                           <p>{errors.creatorWebsite.message}</p>
@@ -895,7 +817,7 @@ function CreateTokenPage({
 
               {customCreatorInfo && (
                 <Alert variant={'neutral'}>
-                  <InfoIcon className='h-4 w-4' />
+                  <InfoIcon className='w-4 h-4' />
                   <AlertTitle className='text-xs'>Information!</AlertTitle>
                   <AlertDescription className='text-xs'>
                     Personalize your token contract address by customizing the
@@ -905,8 +827,8 @@ function CreateTokenPage({
               )}
             </div>
 
-            <div className='mb-6 flex w-full flex-col justify-between gap-1'>
-              <div className='flex w-full flex-row items-center justify-between gap-2'>
+            <div className='flex flex-col justify-between w-full gap-1 mb-6'>
+              <div className='flex flex-row items-center justify-between w-full gap-2'>
                 <div className='flex flex-row items-center gap-1'>
                   <Controller
                     name='createSocial'
@@ -927,8 +849,8 @@ function CreateTokenPage({
 
               {createSocial && (
                 <>
-                  <div className='flex w-full flex-col justify-between gap-3 md:flex-row'>
-                    <div className='flex w-full flex-col gap-1'>
+                  <div className='flex flex-col justify-between w-full gap-3 md:flex-row'>
+                    <div className='flex flex-col w-full gap-1'>
                       <Label htmlFor='socialWebsite'>Website</Label>
                       <Input
                         type='text'
@@ -938,7 +860,7 @@ function CreateTokenPage({
                       />
                     </div>
 
-                    <div className='flex w-full flex-col gap-1'>
+                    <div className='flex flex-col w-full gap-1'>
                       <Label htmlFor='socialTwitter'>Twitter</Label>
                       <Input
                         type='text'
@@ -949,8 +871,8 @@ function CreateTokenPage({
                     </div>
                   </div>
 
-                  <div className='flex w-full flex-col justify-between gap-3 md:flex-row'>
-                    <div className='flex w-full flex-col gap-1'>
+                  <div className='flex flex-col justify-between w-full gap-3 md:flex-row'>
+                    <div className='flex flex-col w-full gap-1'>
                       <Label htmlFor='socialTelegram'>Telegram</Label>
                       <Input
                         type='text'
@@ -960,7 +882,7 @@ function CreateTokenPage({
                       />
                     </div>
 
-                    <div className='flex w-full flex-col gap-1'>
+                    <div className='flex flex-col w-full gap-1'>
                       <Label htmlFor='socialDiscord'>Discord</Label>
                       <Input
                         type='text'
@@ -971,8 +893,8 @@ function CreateTokenPage({
                     </div>
                   </div>
 
-                  <div className='flex w-full flex-col justify-between gap-3 md:flex-row'>
-                    <div className='flex w-full flex-col gap-1'>
+                  <div className='flex flex-col justify-between w-full gap-3 md:flex-row'>
+                    <div className='flex flex-col w-full gap-1'>
                       <Label htmlFor='socialInstagram'>Instagram</Label>
                       <Input
                         type='text'
@@ -982,7 +904,7 @@ function CreateTokenPage({
                       />
                     </div>
 
-                    <div className='flex w-full flex-col gap-1'>
+                    <div className='flex flex-col w-full gap-1'>
                       <Label htmlFor='socialFacebook'>Facebook</Label>
                       <Input
                         type='text'
@@ -1000,84 +922,70 @@ function CreateTokenPage({
               <Button
                 type='submit'
                 disabled={loading}
-                className='w-full cursor-pointer rounded-lg px-6 py-3 font-semibold transition duration-300'
+                className='w-full px-6 py-3 font-semibold transition duration-300 rounded-lg cursor-pointer'
               >
                 {loading ? (
                   <Spinner />
                 ) : (
                   <>
-                    <PlusCircle className='mr-2 h-4 w-4' /> Create Token
+                    <PlusCircle className='w-4 h-4 mr-2' /> Create Token
                   </>
                 )}
               </Button>
             ) : (
-              <span className='flex w-full justify-center text-yellow-400'>
+              <span className='flex justify-center w-full text-yellow-400'>
                 Please connect your wallet! 
               </span>
             )}
           </form>
-          {tokenFee && (
-            <span className='text-xs mt-3 text-center italic text-yellow-400'>
-              The cost of Token creation is{' '}
-              <span className='line-through'>{realPrice}</span>{' '}
-              {computedTotalFee} SOL, covering all fees!.
-            </span>
-          )}
-          {discount > 0 && (
-            <span className='text-xs mt-1 text-center italic text-yellow-400'>
-              Including Referral Discount of {discount * 100}%
-            </span>
-          )}
-          {promotionDiscount > 0 && (
-            <span className='text-xs mt-1 text-center italic text-yellow-400'>
-              Including Promotion Discount of {promotionDiscount * 100}%
-            </span>
-          )}
+          <span className='mt-3 text-xs italic text-center text-yellow-400'>
+            The cost of Token creation is {tokenFee} SOL, covering all fees!.
+          </span>
           {errorMessage && (
-            <span className='text-xs mt-3 text-center italic text-red-500'>
+            <span className='mt-3 text-xs italic text-center text-red-500'>
               {errorMessage}
             </span>
           )}
         </div>
-        <div className='order-1 flex flex-col gap-3 md:order-2 md:w-1/3'>
-          <h2 className='mb-5 text-center text-4xl font-bold'>How to use?</h2>
-          <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
+        <div className='flex flex-col order-1 gap-3 md:order-2 md:w-1/3'>
+          <h2 className='mb-5 text-4xl font-bold text-center'>How to use?</h2>
+          <div className='flex flex-col gap-2 p-2 border-gray-500 rounded border-1 md:flex-row'>
             <span className='text-yellow-400'>Step 1</span>
             <span>Connect your Solana wallet</span>
           </div>
-          <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
+          <div className='flex flex-col gap-2 p-2 border-gray-500 rounded border-1 md:flex-row'>
             <span className='text-yellow-400'>Step 2</span>
             <span>Specify the desired name and symbol</span>
           </div>
-          <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
+          <div className='flex flex-col gap-2 p-2 border-gray-500 rounded border-1 md:flex-row'>
             <span className='text-yellow-400'>Step 3</span>
             <span>Select the decimals quantity</span>
           </div>
-          <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
+          <div className='flex flex-col gap-2 p-2 border-gray-500 rounded border-1 md:flex-row'>
             <span className='text-yellow-400'>Step 4</span>
             <span>Set the amount of suppliers</span>
           </div>
-          <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
+          <div className='flex flex-col gap-2 p-2 border-gray-500 rounded border-1 md:flex-row'>
             <span className='text-yellow-400'>Step 5</span>
             <span>Upload a 500x500 or less image</span>
           </div>
-          <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
+          <div className='flex flex-col gap-2 p-2 border-gray-500 rounded border-1 md:flex-row'>
             <span className='text-yellow-400'>Step 6</span>
             <span>Provide a brief description</span>
           </div>
-          <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
+          <div className='flex flex-col gap-2 p-2 border-gray-500 rounded border-1 md:flex-row'>
             <span className='text-yellow-400'>Step 7</span>
             <span>Add tags or keywords</span>
           </div>
-          <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
+          <div className='flex flex-col gap-2 p-2 border-gray-500 rounded border-1 md:flex-row'>
             <span className='text-yellow-400'>Step 8</span>
             <span>Click on Create Token</span>
           </div>
-          <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
+          <div className='flex flex-col gap-2 p-2 border-gray-500 rounded border-1 md:flex-row'>
             <span className='text-yellow-400'>Step 9</span>
             <span>Accept the transaction.</span>
           </div>
-          <div className='border-1 flex justify-center gap-2 rounded border-gray-500 p-2 md:flex-row md:justify-start'>
+          <div className='flex justify-center gap-2 p-2 border-gray-500 rounded border-1 md:flex-row md:justify-start'>
             <span>Your token is ready 🚀🚀🚀</span>
           </div>
         </div>
@@ -1089,22 +997,5 @@ function CreateTokenPage({
     </div>
   );
 }
-
-export const getServerSideProps: GetServerSideProps<
-  SSRCreateTokenPageProps
-> = async () => {
-  const promotionEndDate = process.env.PROMOTION_END_DATE || '';
-  const discount = Number(process.env.PROMOTION_DISCOUNT || 0);
-  const today = dayjs();
-  const endDate = dayjs(promotionEndDate);
-  const promotionDiscount = today.isBefore(endDate) ? discount : 0;
-  return {
-    props: {
-      endpoint: process.env.SOLANA_ENDPOINT || '',
-      promotionEndDate,
-      promotionDiscount,
-    },
-  };
-};
 
 export default CreateTokenPage;

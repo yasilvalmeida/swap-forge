@@ -22,16 +22,16 @@ import {
   MenubarSeparator,
   MenubarTrigger,
 } from '@/components/ui/menubar';
-import { copyToClipboard } from '@/lib/utils';
+import { copyToClipboard } from '@/libs/utils';
 import { Label } from '@radix-ui/react-label';
 import { Copy, LinkIcon, MoreVertical } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Button } from './button';
 import { Input } from './input';
-import { getCreatedTokenList, getWallet } from '@/lib/utils/wallet';
-import { REFERRAL_LINK } from '@/lib/constants';
+import { getCreatedTokenList, getWallet } from '@/libs/utils/wallet';
+import { REFERRAL_LINK } from '@/libs/constants';
 import { AffiliateProgramResume } from '@/components/layout/affiliate-program';
-import { TokenAccountDto } from '@/lib/models/wallet';
+import { TokenAccountDto } from '@/libs/models/wallet';
 import {
   ColumnDef,
   flexRender,
@@ -75,7 +75,7 @@ const WalletButton = () => {
   const [openReferralModal, setOpenReferralModal] = useState<boolean>(false);
   const [openCreatedToken, setOpenCreatedToken] = useState<boolean>(false);
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [balance, setBalance] = useState<number>(0);
+  const [balance, setBalance] = useState<string>('');
   const [referralCode, setReferralCode] = useState<string>();
   const [createdTokens, setCreatedTokens] = useState<TokenAccountDto[]>([]);
 
@@ -96,7 +96,9 @@ const WalletButton = () => {
       if (publicKey) {
         try {
           const balance = await connection.getBalance(publicKey);
-          setBalance(balance / LAMPORTS_PER_SOL);
+          const balanceInSol = balance / LAMPORTS_PER_SOL;
+          const formattedBalance = balanceInSol < 1 ? balanceInSol.toFixed(6) : (balanceInSol).toFixed(2);
+          setBalance(formattedBalance);
         } catch (error) {
           console.log('error', error);
           toast.error('Insufficient Balance!');
@@ -130,7 +132,7 @@ const WalletButton = () => {
         cell: ({ row }) => {
           const createdAt = dayjs(row.getValue('createdAt'));
           return (
-            <div className='text-center font-medium'>
+            <div className='font-medium text-center'>
               {createdAt.format('DD/MM/YYYY')}
             </div>
           );
@@ -145,7 +147,7 @@ const WalletButton = () => {
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant='ghost' className='h-8 w-8'>
+                <Button variant='ghost' className='w-8 h-8'>
                   <span className='sr-only'>Open menu</span>
                   <MoreVertical />
                 </Button>
@@ -201,24 +203,24 @@ const WalletButton = () => {
       <Menubar className='w-full text-gray-900'>
         <MenubarMenu>
           <MenubarTrigger className='text-gray-900'>
-            <span className='cursor-pointer text-gray-900'>
+            <span className='text-gray-900 cursor-pointer'>
               {`Connected: ${publicKey?.toBase58().slice(0, 6)}...`}
             </span>
           </MenubarTrigger>
-          <MenubarContent className='cursor-pointer text-gray-900'>
-            <MenubarItem className='cursor-pointer text-gray-900'>
+          <MenubarContent className='text-gray-900 cursor-pointer'>
+            <MenubarItem className='text-gray-900 cursor-pointer'>
               My balance {balance ?? 0} SOL
             </MenubarItem>
             <MenubarItem
               onClick={onGetMyTokens}
-              className='cursor-pointer text-gray-900'
+              className='text-gray-900 cursor-pointer'
             >
               My Token List
             </MenubarItem>
             {referralCode && (
               <MenubarItem
                 onClick={onGetReferalCode}
-                className='cursor-pointer text-gray-900'
+                className='text-gray-900 cursor-pointer'
               >
                 Get Referal Code
               </MenubarItem>
@@ -226,7 +228,7 @@ const WalletButton = () => {
             <MenubarSeparator />
             <MenubarItem
               onClick={disconnect}
-              className='cursor-pointer text-gray-900'
+              className='text-gray-900 cursor-pointer'
             >
               Disconnect
             </MenubarItem>
@@ -243,7 +245,7 @@ const WalletButton = () => {
                 Get Your Referral Code
               </DialogDescription>
             </DialogHeader>
-            <div className='mt-4 flex items-center space-x-2'>
+            <div className='flex items-center mt-4 space-x-2'>
               <div className='grid flex-1 gap-2'>
                 <Label htmlFor='referralCode' className='sr-only'>
                   Token
@@ -258,7 +260,7 @@ const WalletButton = () => {
                     toast.success('Referal Code copied!');
                   }}
                   size='sm'
-                  className='cursor-pointer px-3'
+                  className='px-3 cursor-pointer'
                 >
                   <span className='sr-only'>Copy</span>
                   <Copy />
@@ -295,7 +297,7 @@ const WalletButton = () => {
               </DialogDescription>
             </DialogHeader>
             <div className='h-max-[500px] w-full overflow-auto'>
-              <div className='rounded-md border bg-gray-50'>
+              <div className='border rounded-md bg-gray-50'>
                 <Table>
                   <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => (

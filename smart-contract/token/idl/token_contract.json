@@ -1,0 +1,310 @@
+{
+  "address": "AkugdJHDjDvBaxUGC6pjyrfqEpDfJ4Z9Ji9NED6Lmddg",
+  "metadata": {
+    "name": "token_contract",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Swapforge Token Contract"
+  },
+  "instructions": [
+    {
+      "name": "create_token",
+      "docs": [
+        "Creates a new token with metadata"
+      ],
+      "discriminator": [
+        84,
+        52,
+        204,
+        228,
+        24,
+        140,
+        234,
+        75
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "deployer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        },
+        {
+          "name": "token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  45,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "payer"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "sysvar_instructions"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_metadata_program"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "symbol",
+          "type": "string"
+        },
+        {
+          "name": "decimals",
+          "type": "u8"
+        },
+        {
+          "name": "uri",
+          "type": "string"
+        },
+        {
+          "name": "initial_supply",
+          "type": "u64"
+        },
+        {
+          "name": "revoke_mint",
+          "type": "bool"
+        },
+        {
+          "name": "revoke_freeze",
+          "type": "bool"
+        },
+        {
+          "name": "revoke_update",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "initialize_security",
+      "docs": [
+        "Initializes program security settings (call once after deployment)"
+      ],
+      "discriminator": [
+        34,
+        18,
+        166,
+        159,
+        18,
+        55,
+        139,
+        139
+      ],
+      "accounts": [
+        {
+          "name": "security",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  45,
+                  115,
+                  101,
+                  99,
+                  117,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "upgrade_security",
+      "docs": [
+        "Updates security settings (admin only)"
+      ],
+      "discriminator": [
+        212,
+        116,
+        192,
+        162,
+        225,
+        25,
+        4,
+        127
+      ],
+      "accounts": [
+        {
+          "name": "security",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  45,
+                  115,
+                  101,
+                  99,
+                  117,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_txt",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ProgramSecurity",
+      "discriminator": [
+        198,
+        90,
+        128,
+        76,
+        164,
+        62,
+        91,
+        221
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "Unauthorized: Signer does not have admin privileges"
+    },
+    {
+      "code": 6001,
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds for transaction"
+    },
+    {
+      "code": 6002,
+      "name": "AlreadyInitialized",
+      "msg": "Security account already initialized"
+    }
+  ],
+  "types": [
+    {
+      "name": "ProgramSecurity",
+      "docs": [
+        "Security account data"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u32"
+          },
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "security_txt",
+            "type": "string"
+          },
+          {
+            "name": "last_updated",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ]
+}

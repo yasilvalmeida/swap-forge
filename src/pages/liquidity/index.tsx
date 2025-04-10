@@ -1,9 +1,8 @@
 import dynamic from 'next/dynamic';
 import WalletButton from '@/components/ui/wallet-button';
-import { GetServerSideProps } from 'next';
 import dotenv from 'dotenv';
 import { useEffect, useMemo, useState } from 'react';
-import { getPoolList } from '@/lib/utils/raydium';
+import { getPoolList } from '@/libs/utils/raydium';
 import { ApiV3PoolInfoItem, PoolFetchType } from '@raydium-io/raydium-sdk-v2';
 import {
   createColumnHelper,
@@ -24,23 +23,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { formatNumber } from '@/lib/utils';
+import { formatNumber } from '@/libs/utils';
 import { ArrowLeftRight, FilterIcon, FilterX } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { Label } from '@/components/ui/label';
-import { LiquidityPoolSortDto } from '@/lib/models/liquidity';
+import { LiquidityPoolSortDto } from '@/libs/models/liquidity';
 
 dotenv.config();
 
 const Navbar = dynamic(() => import('@/components/layout/navbar'), {});
 const Header = dynamic(() => import('@/components/layout/header'), {});
 const Footer = dynamic(() => import('@/components/layout/footer'), {});
-
-interface SSRLiquidityPageProps {
-  swapForgeSecret: string;
-  network: string;
-}
 
 function LiquidityPage() {
   const { ref, inView } = useInView({
@@ -71,25 +65,25 @@ function LiquidityPage() {
         cell: (info) => (
           <div className='flex items-center justify-start gap-2'>
             <div className='relative flex flex-row items-center'>
-              <div className='relative h-6 w-6'>
+              <div className='relative w-6 h-6'>
                 {info?.row?.original?.mintA?.logoURI && (
                   <Image
                     src={info?.row?.original?.mintA?.logoURI}
                     alt={info?.row?.original?.mintA?.name}
                     width={20}
                     height={20}
-                    className='h-full w-full rounded-full border-2 border-indigo-900 shadow-lg'
+                    className='w-full h-full border-2 border-indigo-900 rounded-full shadow-lg'
                   />
                 )}
               </div>
-              <div className='relative -ml-2 h-6 w-6'>
+              <div className='relative w-6 h-6 -ml-2'>
                 {info?.row?.original?.mintB?.logoURI && (
                   <Image
                     src={info?.row?.original?.mintB?.logoURI}
                     alt={info?.row?.original?.mintB?.name}
                     width={20}
                     height={20}
-                    className='h-full w-full rounded-full border-2 border-indigo-900 shadow-lg'
+                    className='w-full h-full border-2 border-indigo-900 rounded-full shadow-lg'
                   />
                 )}
               </div>
@@ -160,14 +154,14 @@ function LiquidityPage() {
         cell: (info) => (
           <div className='flex justify-center' vocab={info.row.original.id}>
             <Button
-              className='bg-primary hover:bg-primary-hover cursor-pointer rounded-md px-2 py-1 leading-6 text-white shadow-sm'
+              className='px-2 py-1 leading-6 text-white rounded-md shadow-sm cursor-pointer bg-primary hover:bg-primary-hover'
               onClick={() => {
                 router.push({
                   pathname: `/swap-token/${info?.row?.original?.id}`,
                 });
               }}
             >
-              <ArrowLeftRight className='h-4 w-4' />
+              <ArrowLeftRight className='w-4 h-4' />
             </Button>
           </div>
         ),
@@ -225,7 +219,7 @@ function LiquidityPage() {
   }, [type, sort, order, queryClient]);
 
   return (
-    <div className='min-h-screen bg-gray-900 text-white'>
+    <div className='min-h-screen text-white bg-gray-900'>
       <Header
         isLanding={false}
         title='Liquidity'
@@ -238,9 +232,9 @@ function LiquidityPage() {
         <WalletButton />
       </div>
 
-      <section className='bg-gray-800 px-4 py-2'>
-        <div className='mx-auto max-w-6xl'>
-          <div className='my-2 flex flex-row justify-between gap-2'>
+      <section className='px-4 py-2 bg-gray-800'>
+        <div className='max-w-6xl mx-auto'>
+          <div className='flex flex-row justify-between gap-2 my-2'>
             <div className='flex flex-col gap-2'>
               <Button
                 onClick={(e) => {
@@ -250,14 +244,14 @@ function LiquidityPage() {
                 className='w-32 cursor-pointer'
               >
                 {showFilter ? (
-                  <FilterX className='h-5 w-4' />
+                  <FilterX className='w-4 h-5' />
                 ) : (
-                  <FilterIcon className='h-4 w-4' />
+                  <FilterIcon className='w-4 h-4' />
                 )}
                 Filters
               </Button>
               {showFilter && (
-                <div className='border-1 flex flex-row gap-2 rounded border-purple-900 p-2'>
+                <div className='flex flex-row gap-2 p-2 border-purple-900 rounded border-1'>
                   <div className='flex flex-col gap-2'>
                     <span className='flex flex-row justify-center'>
                       <Label>Type</Label>
@@ -361,12 +355,12 @@ function LiquidityPage() {
                 }}
                 className='cursor-pointer'
               >
-                <PlusIcon className='h-4 w-4' />
+                <PlusIcon className='w-4 h-4' />
                 Create
               </Button> */}
             </span>
           </div>
-          <div className='relative overflow-hidden rounded-lg border border-purple-900 shadow-lg'>
+          <div className='relative overflow-hidden border border-purple-900 rounded-lg shadow-lg'>
             <div className='absolute inset-0 shadow-[0_0_20px_5px_rgba(128,0,128,0.5)]'></div>
             <div className='overflow-auto bg-gray-800 bg-opacity-10 backdrop-blur-md'>
               <table className='min-w-full'>
@@ -406,7 +400,7 @@ function LiquidityPage() {
                         {row.getVisibleCells().map((cell) => (
                           <td
                             key={cell.id}
-                            className='border border-slate-700 p-2'
+                            className='p-2 border border-slate-700'
                           >
                             {flexRender(
                               cell.column.columnDef.cell,
@@ -448,16 +442,5 @@ function LiquidityPage() {
     </div>
   );
 }
-
-export const getServerSideProps: GetServerSideProps<
-  SSRLiquidityPageProps
-> = async () => {
-  return {
-    props: {
-      swapForgeSecret: process.env.SWAPFORGE_WALLET_SECRET || '',
-      network: process.env.SOLANA_NETWORK || '',
-    },
-  };
-};
 
 export default LiquidityPage;

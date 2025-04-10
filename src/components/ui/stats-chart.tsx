@@ -13,7 +13,7 @@ import {
   Filler,
 } from 'chart.js';
 import { useMemo } from 'react';
-import { TimeRangeDTO, TokenWalletStatsDto } from '@/lib/models/stats';
+import { TimeRangeDTO, TokenWalletStatsDto } from '@/libs/models/stats';
 import dayjs from 'dayjs';
 
 ChartJS.register(

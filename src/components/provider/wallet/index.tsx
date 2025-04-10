@@ -13,12 +13,15 @@ import {
   SolflareWalletAdapter,
   TrustWalletAdapter,
 } from '@solana/wallet-adapter-wallets';
+import { clusterApiUrl } from '@solana/web3.js';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { toast } from 'react-toastify';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 import '@solana/wallet-adapter-react-ui/styles.css';
+
 
 interface AppWalletProviderProps {
   children: React.ReactNode;
@@ -27,11 +30,11 @@ interface AppWalletProviderProps {
 export default function AppWalletProvider({
   children,
 }: AppWalletProviderProps) {
+  const network = WalletAdapterNetwork.Devnet;
   const endpoint = useMemo(
     () =>
-      process.env.SOLANA_ENDPOINT ||
-      'https://damp-muddy-isle.solana-mainnet.quiknode.pro/6f3f143081a2ab0946f82437bb7a3b050e7f36c1/',
-    []
+      process.env.NEXT_PUBLIC_SOLANA_ENDPOINT || clusterApiUrl(network),
+    [network]
   );
 
   const wallets = useMemo(() => {

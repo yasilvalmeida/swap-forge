@@ -1,5 +1,4 @@
 import { useWallet } from '@solana/wallet-adapter-react';
-import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import WalletButton from '@/components/ui/wallet-button';
 import { useForm, FormProvider, Controller } from 'react-hook-form';
@@ -23,17 +22,17 @@ import {
   getCreateLiquidityFee,
   getPoolById,
   getTokenList,
-} from '@/lib/utils/raydium';
+} from '@/libs/utils/raydium';
 import { ApiV3PoolInfoItem, ApiV3Token } from '@raydium-io/raydium-sdk-v2';
-import { Keypair } from '@solana/web3.js';
 import { GetServerSideProps } from 'next';
 import { WalletSendTransactionError } from '@solana/wallet-adapter-base';
 import { AxiosError } from 'axios';
-import { ErrorResponseDto } from '@/lib/models';
+import { ErrorResponseDto } from '@/libs/models';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { SwapTokenFormData } from '@/lib/validation/swap-token';
+import { SwapTokenFormData } from '@/libs/validation/swap-token';
+
+import dynamic from 'next/dynamic';
 import dotenv from 'dotenv';
-import bs58 from 'bs58';
 
 dotenv.config();
 
@@ -42,21 +41,18 @@ const Header = dynamic(() => import('@/components/layout/header'), {});
 const Footer = dynamic(() => import('@/components/layout/footer'), {});
 
 interface SSRSwapTokenPageProps {
-  swapForgeSecret: string;
-  network: string;
   poolId: string;
   pool: ApiV3PoolInfoItem;
   tokenList: ApiV3Token[];
 }
 
 function SwapTokenPage({
-  swapForgeSecret,
   poolId,
   pool,
   tokenList,
 }: SSRSwapTokenPageProps) {
   const [schema, setSchema] = useState<
-    typeof import('@/lib/validation/swap-token').swapTokenFormSchema | null
+    typeof import('@/libs/validation/swap-token').swapTokenFormSchema | null
   >(null);
 
   const price = useMemo(() => {
@@ -92,15 +88,7 @@ function SwapTokenPage({
           return;
         }
 
-        const swapForgeAuthority = Keypair.fromSecretKey(
-          bs58.decode(swapForgeSecret)
-        );
-
-        console.log(
-          'swapForgeAuthority',
-          swapForgeAuthority,
-          swapTokenFormData
-        );
+        console.log('swapTokenFormData', swapTokenFormData);
 
         /* setLoading(true); */
         // Your swap logic here...
@@ -124,7 +112,7 @@ function SwapTokenPage({
         /* setLoading(false); */
       }
     },
-    [connected, publicKey, swapForgeSecret]
+    [connected, publicKey]
   );
 
   const handleSwap = useCallback(() => {
@@ -142,7 +130,7 @@ function SwapTokenPage({
   );
 
   useEffect(() => {
-    import('@/lib/validation/swap-token').then((module) => {
+    import('@/libs/validation/swap-token').then((module) => {
       setSchema(module.swapTokenFormSchema);
     });
     const getFee = async () => {
@@ -154,7 +142,7 @@ function SwapTokenPage({
   }, []);
 
   return (
-    <div className='min-h-screen bg-gray-900 text-white'>
+    <div className='min-h-screen text-white bg-gray-900'>
       <Header
         isLanding={false}
         title='Token Swapping'
@@ -167,21 +155,21 @@ function SwapTokenPage({
         <WalletButton />
       </div>
 
-      <div className='mx-auto flex max-w-6xl flex-col justify-center gap-2 px-4 py-20'>
-        <h1 className='mb-6 text-center text-4xl font-bold'>Swap Tokens</h1>
+      <div className='flex flex-col justify-center max-w-6xl gap-2 px-4 py-20 mx-auto'>
+        <h1 className='mb-6 text-4xl font-bold text-center'>Swap Tokens</h1>
         {poolId && (
           <span className='flex flex-row justify-center gap-1 text-sm'>
             <span>Pool ID</span>
             <span className='text-yellow-400'>{poolId}</span>
           </span>
         )}
-        <div className='mb-2 flex flex-row justify-center gap-1'>
+        <div className='flex flex-row justify-center gap-1 mb-2'>
           <FormProvider {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className='border-1 flex w-1/2 flex-col rounded border-gray-500 p-3'
+              className='flex flex-col w-1/2 p-3 border-gray-500 rounded border-1'
             >
-              <div className='flex w-full flex-col items-center justify-center gap-1 p-1 md:flex-row'>
+              <div className='flex flex-col items-center justify-center w-full gap-1 p-1 md:flex-row'>
                 <FormField
                   control={form.control}
                   name='inputMint'
@@ -209,7 +197,7 @@ function SwapTokenPage({
                           <input
                             {...field}
                             onChange={field.onChange}
-                            className='h-9 w-full rounded-lg bg-gray-700 p-3 text-right focus:outline-none focus:ring-2 focus:ring-yellow-400'
+                            className='w-full p-3 text-right bg-gray-700 rounded-lg h-9 focus:outline-none focus:ring-2 focus:ring-yellow-400'
                             placeholder='Input amount'
                           />
                         )}
@@ -219,7 +207,7 @@ function SwapTokenPage({
                   )}
                 />
                 <Button
-                  className='w-10 cursor-pointer rounded-lg px-6 py-3 font-semibold transition duration-300'
+                  className='w-10 px-6 py-3 font-semibold transition duration-300 rounded-lg cursor-pointer'
                   variant={'link'}
                   /* onMouseEnter={() => setSwapIconHover(true)}
                   onMouseLeave={() => setSwapIconHover(false)} */
@@ -229,11 +217,11 @@ function SwapTokenPage({
                   }}
                 >
                   {/* {swapIconHover ? (
-                    <ArrowLeftRight className='h-4 w-4 text-white' />
+                    <ArrowLeftRight className='w-4 h-4 text-white' />
                   ) : (
-                    <ArrowRight className='h-4 w-4 text-white' />
+                    <ArrowRight className='w-4 h-4 text-white' />
                   )} */}
-                  <ArrowRight className='h-4 w-4 text-white' />
+                  <ArrowRight className='w-4 h-4 text-white' />
                 </Button>
                 <FormField
                   control={form.control}
@@ -256,7 +244,7 @@ function SwapTokenPage({
                       </Select>
                       <input
                         value={getTokenPrice(outputMint)}
-                        className='h-9 w-full rounded-lg bg-gray-700 p-3 text-right focus:outline-none focus:ring-2 focus:ring-yellow-400'
+                        className='w-full p-3 text-right bg-gray-700 rounded-lg h-9 focus:outline-none focus:ring-2 focus:ring-yellow-400'
                         placeholder='Input amount'
                       />
                       <FormMessage />
@@ -265,7 +253,7 @@ function SwapTokenPage({
                 />
               </div>
 
-              <span className='text-xs flex flex-row justify-center italic text-yellow-400'>{`1 ${
+              <span className='flex flex-row justify-center text-xs italic text-yellow-400'>{`1 ${
                 pool?.mintA?.symbol
               } ~ ${price?.toFixed(6)} ${pool?.mintB?.symbol}`}</span>
 
@@ -274,20 +262,20 @@ function SwapTokenPage({
                   <Button
                     type='submit'
                     disabled={loading}
-                    className='w-32 cursor-pointer rounded-lg px-6 py-3 font-semibold transition duration-300'
+                    className='w-32 px-6 py-3 font-semibold transition duration-300 rounded-lg cursor-pointer'
                   >
                     {loading ? (
                       <Spinner />
                     ) : (
-                      <span className='item flex items-center gap-2'>
+                      <span className='flex items-center gap-2 item'>
                         Swap Token
-                        <ArrowLeftRight className='h-4 w-4' />
+                        <ArrowLeftRight className='w-4 h-4' />
                       </span>
                     )}
                   </Button>
                 </div>
               ) : (
-                <span className='flex w-full justify-center text-yellow-400'>
+                <span className='flex justify-center w-full text-yellow-400'>
                   Please connect your wallet!
                 </span>
               )} */}
@@ -295,11 +283,11 @@ function SwapTokenPage({
           </FormProvider>
         </div>
 
-        {/* <span className='text-xs text-center italic text-yellow-400'>
+        {/* <span className='text-xs italic text-center text-yellow-400'>
           The cost of Token swapping is 2% of the amount swapped!
         </span> */}
         {errorMessage && (
-          <span className='text-xs mt-3 text-center italic text-red-500'>
+          <span className='mt-3 text-xs italic text-center text-red-500'>
             {errorMessage}
           </span>
         )}
@@ -358,8 +346,6 @@ export const getServerSideProps: GetServerSideProps<
   }
   return {
     props: {
-      swapForgeSecret: process.env.SWAPFORGE_WALLET_SECRET || '',
-      network: process.env.SOLANA_NETWORK || '',
       poolId,
       pool,
       tokenList: tokenList?.sort((a: ApiV3Token, b: ApiV3Token) =>
