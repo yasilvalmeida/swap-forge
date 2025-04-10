@@ -65,6 +65,7 @@ export const createTokenFromContract = async (
   isRevokeFreeze: boolean,
   isRevokeUpdate: boolean
 ): Promise<{ tx: TransactionSignature, mint: string }> => {
+  if (!program.provider.wallet) throw new Error('No wallet connected');
   const mintKeypair = anchor.web3.Keypair.generate();
 
   const [metadata] = PublicKey.findProgramAddressSync(
@@ -75,7 +76,7 @@ export const createTokenFromContract = async (
   ],
     TOKEN_METADATA_PROGRAM_ID);
   
-  tx = await program.methods
+  const transaction = await program.methods
     .createToken(
       name,
       symbol,
@@ -111,20 +112,31 @@ export const createTokenFromContract = async (
       },
     ])
     .signers([mintKeypair])
-    .rpc();
+    .transaction();
   
   const connection = new Connection(
     program.provider.connection.rpcEndpoint,
     'confirmed'
-  )
+  );
 
   const latestBlockHash = await connection.getLatestBlockhash();
+  transaction.recentBlockhash = latestBlockHash.blockhash;
+  transaction.feePayer = publicKey;
 
+  // Sign the transaction
+  const signedTx = await program.provider.wallet.signTransaction(transaction);
+  
+  // Send the signed transaction
+  const signature = await connection.sendRawTransaction(signedTx.serialize());
+
+  // Confirm the transaction
   await connection.confirmTransaction({
     blockhash: latestBlockHash.blockhash,
     lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-    signature: tx
-  } , 'finalized')
+    signature: signature
+  }, 'finalized');
+
+  tx = signature;
   
   return { tx, mint: mintKeypair.publicKey.toBase58() };
 }
