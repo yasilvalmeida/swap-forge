@@ -45,4 +45,5 @@ next-env.d.ts
 .netlify
 
 # PM2 deploy
-.deploys
+.deploys*
+current*

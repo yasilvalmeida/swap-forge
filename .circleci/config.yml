@@ -4,7 +4,7 @@ orbs:
   node: circleci/node@5.2.0
 
 jobs:
-  build-and-test:
+  build:
     docker:
       - image: cimg/node:20.18
     steps:
@@ -16,9 +16,9 @@ jobs:
           name: Run build
           command: yarn build
 
-  deploy-production:
-    docker:
-      - image: cimg/node:20.18
+  deploy:
+    machine:
+      image: ubuntu-2204:edge
     steps:
       - add_ssh_keys:
           fingerprints:
@@ -29,22 +29,12 @@ jobs:
             ssh -o StrictHostKeyChecking=no -o BatchMode=yes $SSH_USER@$SSH_HOST "cd /home/webapp/swapforge && sudo npm i -g pm2 yarn && pm2 deploy /home/webapp/swapforge/ecosystem.config.js production"
 
 workflows:
-  build:
+  build-and-deploy:
     jobs:
-      - build-and-test:
+      - build
+      - deploy:
+          requires:
+            - build
           filters:
-            branches:
-              ignore:
-                - main
-
-  production:
-    jobs:
-      - build-and-test:
-          filters: &filters-production
             branches:
               only: main
-      - deploy-production:
-          filters:
-            <<: *filters-production
-          requires:
-            - 'build-and-test'
