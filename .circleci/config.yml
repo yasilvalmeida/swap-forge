@@ -26,7 +26,7 @@ jobs:
       - run:
           name: Deploy using SSH
           command: | 
-            ssh -o StrictHostKeyChecking=no -o BatchMode=yes $SSH_USER@$SSH_HOST "cd /home/webapp/swapforge && sudo npm i -g pm2 yarn && pm2 deploy /home/webapp/swapforge/ecosystem.config.js production"
+            ssh -A -o StrictHostKeyChecking=no -o BatchMode=yes $SSH_USER@$SSH_HOST "cd /home/webapp/swapforge && sudo npm i -g pm2 yarn && pm2 deploy /home/webapp/swapforge/ecosystem.config.js production"
 
 workflows:
   build-and-deploy:
