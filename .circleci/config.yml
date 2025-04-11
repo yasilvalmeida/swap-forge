@@ -24,7 +24,13 @@ jobs:
           fingerprints:
             - 'S0V13pVA2H11zkJ1o7ixLfo78Hvz18bOGurDCzIjZwQ'
       - run:
+          name: Verify SSH Key
+          command: ssh-add -l
+      - run:
           name: Test SSH Connection
+          command: ssh -vT $SSH_USER@$SSH_HOST
+      - run:
+          name: Deploy using SSH
           command: | 
             ssh -o StrictHostKeyChecking=no -o BatchMode=yes $SSH_USER@$SSH_HOST "cd /home/webapp/swapforge && sudo npm i -g pm2 yarn && pm2 deploy ../ecosystems/swapforge-ecosystem.config.js production"
 
