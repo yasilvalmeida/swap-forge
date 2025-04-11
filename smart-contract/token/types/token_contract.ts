@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/token_contract.json`.
  */
 export type TokenContract = {
-  "address": "AkugdJHDjDvBaxUGC6pjyrfqEpDfJ4Z9Ji9NED6Lmddg",
+  "address": "BydD8yQtb1kWB7WUnzzq9KduCDzSvUUi1nuoz9wHDM1X",
   "metadata": {
     "name": "tokenContract",
     "version": "0.1.0",

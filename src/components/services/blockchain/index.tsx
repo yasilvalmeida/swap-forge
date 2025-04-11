@@ -1,11 +1,10 @@
 import { AnchorProvider, BN, Program, Wallet } from '@coral-xyz/anchor';
 import { SendTransactionOptions } from "@solana/wallet-adapter-base";
-import { Connection, PublicKey, SystemProgram, Transaction, TransactionSignature, VersionedTransaction } from "@solana/web3.js";
+import { Connection, PublicKey, Transaction, TransactionSignature, VersionedTransaction } from "@solana/web3.js";
 import { TOKEN_METADATA_PROGRAM_ID } from '@/libs/constants/token';
 import * as anchor from '@coral-xyz/anchor';
 import { TokenContract } from '../../../../smart-contract/token/types/token_contract';
 import idl from '../../../../smart-contract/token/idl/token_contract.json';
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 
 let tx: string;
@@ -66,7 +65,6 @@ export const createTokenFromContract = async (
   isRevokeUpdate: boolean
 ): Promise<{ tx: TransactionSignature, mint: string }> => {
   const mintKeypair = anchor.web3.Keypair.generate();
-  console.log('mintKeypair', mintKeypair.publicKey.toBase58())
 
   const [metadata] = PublicKey.findProgramAddressSync(
   [
