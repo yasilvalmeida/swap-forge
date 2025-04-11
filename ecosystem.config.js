@@ -10,7 +10,7 @@ module.exports = {
       watch: false,
       max_memory_restart: '1G',
       env_production: {
-        PORT: 4000,
+        PORT: 3001,
         HOST: '0.0.0.0',
         APP_ENV: 'production',
       },
@@ -19,7 +19,7 @@ module.exports = {
   deploy: {
     production: {
       user: 'root',
-      host: '203.161.38.145',
+      host: '203.161.46.54',
       ref: 'origin/main',
       repo: 'git@github.com:yasilvalmeida/swap-forge.git',
       fetch: 'all',
