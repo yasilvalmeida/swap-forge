@@ -169,10 +169,10 @@ function CreateTokenPage() {
           type: 'manual',
           message: 'Token logo is required',
         });
-      } else if (file.size / 1024 > MAX_LOGO_SIZE) {
+      } else if (file.size / 1024 / 1024 > MAX_LOGO_SIZE) {
         setError('tokenLogo', {
           type: 'manual',
-          message: `Size must be less than ${MAX_LOGO_SIZE}KB`,
+          message: `Size must be less than ${MAX_LOGO_SIZE}MB`,
         });
         return;
       } else if (!['image/jpeg', 'image/png'].includes(file.type)) {
@@ -187,15 +187,22 @@ function CreateTokenPage() {
           dimensions.width > MAX_LOGO_WIDTH ||
           dimensions.height > MAX_LOGO_HEIGHT;
         if (checkDimensionCondition) {
-          tokenLogoBase64 = await convertFileToBase64(file);
-          const resizeImageResponse = await axios.post<ResizeImageResponseDto>(
-            '/api/token/image/resize',
-            {
-              tokenLogoBase64,
-            }
-          );
-          const { resizedTokenLogoBase64 } = resizeImageResponse.data;
-          setValue('tokenLogo', resizedTokenLogoBase64);
+          try {
+            tokenLogoBase64 = await convertFileToBase64(file);
+            const resizeImageResponse = await axios.post<ResizeImageResponseDto>(
+              '/api/token/image/resize',
+              {
+                tokenLogoBase64,
+              }
+            );
+            const { resizedTokenLogoBase64 } = resizeImageResponse.data;
+            setValue('tokenLogo', resizedTokenLogoBase64);
+          } catch {
+            setError('tokenLogo', {
+              type: 'manual',
+              message: `Size must be less than ${MAX_LOGO_SIZE}MB`,
+            });
+          }
         } else {
           tokenLogoBase64 = await convertFileToBase64(file);
           setValue('tokenLogo', tokenLogoBase64);

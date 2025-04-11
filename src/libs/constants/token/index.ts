@@ -2,7 +2,7 @@ import { PublicKey } from "@solana/web3.js";
 
 export const TOKEN_NAME_MAX_CHARS = 30;
 export const TOKEN_SYMBOL_MAX_CHARS = 10;
-export const MAX_LOGO_SIZE = 5 * 1024;
+export const MAX_LOGO_SIZE = 1;
 export const MAX_LOGO_WIDTH = 500;
 export const MAX_LOGO_HEIGHT = 500;
 export const CREATE_TOKEN_FEE = 0.05;

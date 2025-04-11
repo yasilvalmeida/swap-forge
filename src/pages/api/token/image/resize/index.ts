@@ -14,6 +14,14 @@ import {
 } from '@/libs/constants/http';
 import sharp from 'sharp';
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '1mb'
+    }
+  }
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ResizeImageResponseDto | ErrorResponseDto>
