@@ -4,7 +4,7 @@ orbs:
   node: circleci/node@5.2.0
 
 jobs:
-  build:
+  build-and-test:
     docker:
       - image: cimg/node:20.18
     steps:
@@ -15,51 +15,43 @@ jobs:
       - run:
           name: Run build
           command: yarn build
-      - persist_to_workspace:
-          root: .
-          paths: .
 
-  deploy:
-    machine:
-      image: ubuntu-2204:edge
+  deploy-production:
+    docker:
+      - image: cimg/node:20.18
     steps:
-      - attach_workspace:
-          at: .
       - add_ssh_keys:
           fingerprints:
-            - 'S0V13pVA2H11zkJ1o7ixLfo78Hvz18bOGurDCzIjZwQ'
+            - "2b:a3:fb:10:f8:60:9a:78:8d:5f:02:51:76:43:b3:86"
       - run:
-          name: Install SSH dependencies
-          command: sudo apt-get update && sudo apt-get install -y openssh-client rsync
+          name: Add to known hosts
+          command: ssh-keyscan -H 203.161.46.54 >> ~/.ssh/known_hosts
       - run:
-          name: Setup SSH config
+          name: Deploy Application via SSH
           command: |
-            mkdir -p ~/.ssh
-            echo -e "Host *\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
-      - run:
-          name: Verify SSH Access
-          command: ssh -v $SSH_USER@$SSH_HOST "echo 'SSH connection successful!'"
-      - run:
-          name: Direct Deployment
-          command: |
-            rsync -avz -e ssh --delete \
-              --exclude='node_modules' \
-              --exclude='.git' \
-              ./ $SSH_USER@$SSH_HOST:/home/webapp/swapforge/
-            
-            ssh $SSH_USER@$SSH_HOST "
-              cd /home/webapp/swapforge && \
-              yarn install --production && \
-              pm2 restart ../ecosystems/swapforge-ecosystem.config.js
+            ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa_2ba3fb10f8609a788d5f02517643b386 root@203.161.46.54"
+              cd /home/webapp/swapforge &&
+              sudo npm i -g pm2 yarn &&
+              pm2 deploy ../ecosystems/swapforge-ecosystem.config.js production
             "
 
 workflows:
-  build-and-deploy:
+  build:
     jobs:
-      - build
-      - deploy:
-          requires:
-            - build
+      - build-and-test:
           filters:
             branches:
+              ignore:
+                - main
+
+  production:
+    jobs:
+      - build-and-test:
+          filters: &filters-production
+            branches:
               only: main
+      - deploy-production:
+          filters:
+            <<: *filters-production
+          requires:
+            - 'build-and-test'
