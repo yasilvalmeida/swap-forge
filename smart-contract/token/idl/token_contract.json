@@ -29,9 +29,9 @@
           "signer": true
         },
         {
-          "name": "deployer",
+          "name": "treasury",
           "writable": true,
-          "signer": true
+          "address": "DW69JZRd1j3Y2DsEhF2biwk3DPdn6BLeG51AFXg18ho2"
         },
         {
           "name": "mint",
@@ -81,14 +81,16 @@
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "sysvar_instructions"
+          "name": "sysvar_instructions",
+          "address": "Sysvar1nstructions1111111111111111111111111"
         },
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
         {
-          "name": "token_metadata_program"
+          "name": "token_metadata_program",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
         },
         {
           "name": "token_program",
@@ -129,182 +131,53 @@
           "type": "bool"
         }
       ]
-    },
-    {
-      "name": "initialize_security",
-      "docs": [
-        "Initializes program security settings (call once after deployment)"
-      ],
-      "discriminator": [
-        34,
-        18,
-        166,
-        159,
-        18,
-        55,
-        139,
-        139
-      ],
-      "accounts": [
-        {
-          "name": "security",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  114,
-                  111,
-                  103,
-                  114,
-                  97,
-                  109,
-                  45,
-                  115,
-                  101,
-                  99,
-                  117,
-                  114,
-                  105,
-                  116,
-                  121
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "upgrade_security",
-      "docs": [
-        "Updates security settings (admin only)"
-      ],
-      "discriminator": [
-        212,
-        116,
-        192,
-        162,
-        225,
-        25,
-        4,
-        127
-      ],
-      "accounts": [
-        {
-          "name": "security",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  114,
-                  111,
-                  103,
-                  114,
-                  97,
-                  109,
-                  45,
-                  115,
-                  101,
-                  99,
-                  117,
-                  114,
-                  105,
-                  116,
-                  121
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        }
-      ],
-      "args": [
-        {
-          "name": "new_txt",
-          "type": "string"
-        }
-      ]
-    }
-  ],
-  "accounts": [
-    {
-      "name": "ProgramSecurity",
-      "discriminator": [
-        198,
-        90,
-        128,
-        76,
-        164,
-        62,
-        91,
-        221
-      ]
     }
   ],
   "errors": [
     {
       "code": 6000,
-      "name": "Unauthorized",
-      "msg": "Unauthorized: Signer does not have admin privileges"
+      "name": "UnauthorizedTreasury",
+      "msg": "Unauthorized Treasury"
     },
     {
       "code": 6001,
       "name": "InsufficientFunds",
-      "msg": "Insufficient funds for transaction"
+      "msg": "Insufficient funds"
     },
     {
       "code": 6002,
-      "name": "AlreadyInitialized",
-      "msg": "Security account already initialized"
-    }
-  ],
-  "types": [
+      "name": "InvalidFeeCalculation",
+      "msg": "Invalid fee calculation"
+    },
     {
-      "name": "ProgramSecurity",
-      "docs": [
-        "Security account data"
-      ],
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "version",
-            "type": "u32"
-          },
-          {
-            "name": "admin",
-            "type": "pubkey"
-          },
-          {
-            "name": "security_txt",
-            "type": "string"
-          },
-          {
-            "name": "last_updated",
-            "type": "i64"
-          }
-        ]
-      }
+      "code": 6003,
+      "name": "InvalidMetadataAccount",
+      "msg": "Invalid token account owner"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidTokenName",
+      "msg": "Invalid token name"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidTokenSymbol",
+      "msg": "Invalid token symbol"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidDecimals",
+      "msg": "Invalid decimals"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidUri",
+      "msg": "Invalid URI"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidInitialSupply",
+      "msg": "Invalid initial supply"
     }
   ]
 }

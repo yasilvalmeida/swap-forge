@@ -55,7 +55,7 @@ export const getProviderReadonly = (): Program<TokenContract> | null => {
 
 export const createTokenFromContract = async (
   program: Program<TokenContract>,
-  publicKey: PublicKey,
+  walletPublicKey: PublicKey,
   name: string,
   symbol: string,
   decimals: number,
@@ -66,6 +66,7 @@ export const createTokenFromContract = async (
   isRevokeUpdate: boolean
 ): Promise<{ tx: TransactionSignature, mint: string }> => {
   const mintKeypair = anchor.web3.Keypair.generate();
+  console.log('mintKeypair', mintKeypair.publicKey.toBase58())
 
   const [metadata] = PublicKey.findProgramAddressSync(
   [
@@ -75,7 +76,7 @@ export const createTokenFromContract = async (
   ],
     TOKEN_METADATA_PROGRAM_ID);
   
-  tx = await program.methods
+  const transaction = await program.methods
     .createToken(
       name,
       symbol,
@@ -87,44 +88,31 @@ export const createTokenFromContract = async (
       isRevokeUpdate
     )
     .accounts({
-      payer: publicKey,
+      payer: walletPublicKey,
       mint: mintKeypair.publicKey,
       metadata,
-      sysvarInstructions: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
-      tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
     })
-    .remainingAccounts([
-      {
-        pubkey: SystemProgram.programId,
-        isWritable: false,
-        isSigner: false,
-      },
-      {
-        pubkey: anchor.web3.SYSVAR_RENT_PUBKEY,
-        isWritable: false,
-        isSigner: false,
-      },
-      {
-        pubkey: TOKEN_PROGRAM_ID,
-        isWritable: false,
-        isSigner: false,
-      },
-    ])
-    .signers([mintKeypair])
-    .rpc();
+    .transaction();
   
-  const connection = new Connection(
-    program.provider.connection.rpcEndpoint,
-    'confirmed'
-  )
+  // Get connection
+  const latestBlockHash = await program.provider.connection.getLatestBlockhash();
+  // Set transaction parameters
+  transaction.feePayer = walletPublicKey;
+  transaction.recentBlockhash = latestBlockHash.blockhash;
+  transaction.sign(mintKeypair)
 
-  const latestBlockHash = await connection.getLatestBlockhash();
+  // Sign the transaction
+  const signedTx = await program.provider.wallet!.signTransaction(transaction);
 
-  await connection.confirmTransaction({
+  // Send and confirm the transaction
+  const rawTransaction = signedTx.serialize();
+  tx = await program.provider.connection.sendRawTransaction(rawTransaction);
+
+  await program.provider.connection.confirmTransaction({
+    signature: tx,
     blockhash: latestBlockHash.blockhash,
     lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-    signature: tx
-  } , 'finalized')
+  });
   
   return { tx, mint: mintKeypair.publicKey.toBase58() };
 }
