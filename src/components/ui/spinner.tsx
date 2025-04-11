@@ -1,10 +1,14 @@
 import React from 'react';
 import { ClipLoader } from 'react-spinners';
 
-const Spinner = () => {
+interface ISpinnerProps {
+  color?: string
+}
+
+const Spinner = ({ color }: ISpinnerProps) => {
   return (
     <div className='flex items-center justify-center'>
-      <ClipLoader size={30} color='#000000' />
+      <ClipLoader size={30} color={color ?? '#000000'} />
     </div>
   );
 };

@@ -11,7 +11,7 @@ import { database } from '@/libs/mongodb';
 import { GetServerSideProps } from 'next';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import StatsChart from '@/components/ui/stats-chart';
+import StatsChart from '@/components/ui/landing/stats-chart';
 
 const Header = dynamic(() => import('@/components/layout/header'), {});
 const Footer = dynamic(() => import('@/components/layout/footer'), {});

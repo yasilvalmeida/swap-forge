@@ -46,6 +46,7 @@ export default async function handler(
 
       const base64Image = resizedImage.toString('base64');
       const resizedTokenLogoBase64 = `data:image/png;base64,${base64Image}`;
+      console.log('resizedTokenLogoBase64',resizedTokenLogoBase64.substring(0, 30))
 
       res.status(200).json({ resizedTokenLogoBase64 });
     }
