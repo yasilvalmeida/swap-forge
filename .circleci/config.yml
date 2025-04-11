@@ -24,6 +24,12 @@ jobs:
           fingerprints:
             - "2b:a3:fb:10:f8:60:9a:78:8d:5f:02:51:76:43:b3:86"
       - run:
+        name: Create .ssh directory and add to known hosts
+        command: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -H 203.161.46.54 >> ~/.ssh/known_hosts
+      - run:
           name: Add to known hosts
           command: ssh-keyscan -H 203.161.46.54 >> ~/.ssh/known_hosts
       - run:
