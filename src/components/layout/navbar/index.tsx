@@ -6,53 +6,38 @@ export default function Navbar() {
   const router = useRouter();
 
   return (
-    <nav className='bg-gray-800 p-4'>
-      <div className='container mx-auto flex flex-col items-center justify-center md:flex-row'>
-        <div className='flex items-center space-x-8'>
-          <Link
-            href='/'
-            className='flex flex-row items-center gap-2 text-2xl font-bold text-white'
-          >
+    <nav className='border-b border-gray-700 bg-gray-800 py-3'>
+      <div className='container mx-auto flex flex-col items-center md:flex-row md:justify-center md:gap-9 md:px-4'>
+        <div className='mb-2 flex items-center md:mb-0'>
+          <Link href='/' className='flex items-center gap-2'>
             <Image
               alt='swap-forge-logo'
-              src={'/images/swap-forge.png'}
-              width={120}
-              height={120}
+              src='/images/swap-forge.png'
+              width={80}
+              height={80}
+              className='h-8 w-auto'
             />
-            SwapForge
+            <span className='text-xl font-bold text-white'>SwapForge</span>
           </Link>
-          <div className='hidden space-x-6 md:flex'>
-            <Link
-              href='/create-token'
-              className={` hover:text-white ${
-                router.pathname === '/create-token'
-                  ? 'text-white'
-                  : 'text-gray-500'
-              }`}
-            >
-              Create Token
-            </Link>
-            <Link
-              href='/liquidity'
-              className={` hover:text-white ${
-                router.pathname === '/liquidity'
-                  ? 'text-white'
-                  : 'text-gray-500'
-              }`}
-            >
-              Liquidity
-            </Link>
-            <Link
-              href='/swap-token'
-              className={` hover:text-white ${
-                router.pathname.includes('/swap-token')
-                  ? 'text-white'
-                  : 'text-gray-500'
-              }`}
-            >
-              Swap Token
-            </Link>
-          </div>
+        </div>
+
+        <div className='flex w-full justify-center space-x-4 overflow-x-auto py-1 md:w-auto md:space-x-5 md:py-0'>
+          <Link
+            href='/create-token'
+            className={`whitespace-nowrap px-2 text-sm font-medium transition-colors hover:text-white ${
+              router.pathname === '/create-token' ? 'text-white' : 'text-gray-400'
+            }`}
+          >
+            Create Token
+          </Link>
+          <Link
+            href='/liquidity'
+            className={`whitespace-nowrap px-2 text-sm font-medium transition-colors hover:text-white ${
+              router.pathname === '/liquidity' ? 'text-white' : 'text-gray-400'
+            }`}
+          >
+            Liquidity
+          </Link>
         </div>
       </div>
     </nav>

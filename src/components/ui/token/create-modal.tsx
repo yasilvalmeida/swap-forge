@@ -11,7 +11,7 @@ import { RAYDIUM_LIQUIDITY_URL } from "@/libs/constants/token";
 import Spinner from "../spinner";
 import { TokenCreateWidget, TokenCreateWidgetProps } from "./creation-widget";
 
-interface CreateModalProps {
+interface TokenCreateModalProps {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
   token: TokenCreateWidgetProps;
@@ -20,7 +20,7 @@ interface CreateModalProps {
   loading: boolean;
 }
 
-export const TokenCreateModal = ({ open, setOpen, token, title, signature, loading }: CreateModalProps) => {
+export const TokenCreateModal = ({ open, setOpen, token, title, signature, loading }: TokenCreateModalProps) => {
   return <Dialog open={open} onOpenChange={setOpen}>
     <DialogPortal>
       <DialogOverlay className='fixed inset-0 bg-black/50' />
@@ -43,7 +43,7 @@ export const TokenCreateModal = ({ open, setOpen, token, title, signature, loadi
               supply={token.supply}
               logo={token.logo}
             />
-            <div className='flex items-center my-8 space-x-2'>
+            <div className='my-8 flex items-center space-x-2'>
               <div className='grid flex-1 gap-2'>
                 <Label htmlFor='token' className='sr-only'>
                   Token
@@ -58,7 +58,7 @@ export const TokenCreateModal = ({ open, setOpen, token, title, signature, loadi
                   toast.success('Token copied!');
                 }}
                 size='sm'
-                className='px-3 cursor-pointer'
+                className='cursor-pointer px-3'
               >
                 <span className='sr-only'>Copy</span>
                 <Copy />
@@ -75,7 +75,7 @@ export const TokenCreateModal = ({ open, setOpen, token, title, signature, loadi
                 target='_blank'
                 className='cursor-pointer'
               >
-                <span className='flex items-center gap-1 text-xs text-yellow-400 underline'>
+                <span className='text-xs flex items-center gap-1 text-yellow-400 underline'>
                   <LinkIcon className='h-4' /> View create token signature
                   on Solscan
                 </span>
@@ -90,7 +90,7 @@ export const TokenCreateModal = ({ open, setOpen, token, title, signature, loadi
                 target='_blank'
                 className='cursor-pointer'
               >
-                <span className='flex items-center gap-1 text-xs text-yellow-400 underline'>
+                <span className='text-xs flex items-center gap-1 text-yellow-400 underline'>
                   <AlignVerticalDistributeEnd className='h-4' /> Create
                   Liquidity Pool on Raydium
                 </span>

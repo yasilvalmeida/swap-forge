@@ -6,11 +6,12 @@ interface IProp {
 
 const Header = ({ isLanding, title, subtitle }: IProp) => {
   return (
-    <section className='py-20 text-center bg-gradient-to-r from-purple-800 to-indigo-900'>
+    <section className='relative bg-gradient-to-r from-purple-800 to-indigo-900 py-20 text-center'>
+      <div className='bg-noise absolute inset-0 opacity-10' />
       {title ? (
-        <h1 className='mb-4 text-4xl font-bold'>{title}</h1>
+        <h1 className='mb-3 text-4xl font-bold md:text-5xl'>{title}</h1>
       ) : (
-        <h1 className='mb-4 text-5xl font-bold'>
+        <h1 className='mb-3 text-4xl font-bold md:text-5xl'>
           Welcome to <span className='text-yellow-400'>SwapForge</span>
         </h1>
       )}
@@ -22,13 +23,13 @@ const Header = ({ isLanding, title, subtitle }: IProp) => {
           </p>
           <a
             href='#features'
-            className='px-6 py-3 font-semibold text-gray-900 transition duration-300 bg-yellow-400 rounded-lg hover:bg-yellow-500'
+            className='rounded-lg bg-yellow-400 px-6 py-3 font-semibold text-gray-900 transition duration-300 hover:bg-yellow-500'
           >
             Explore Features
           </a>
         </>
       ) : (
-        <p className='text-xl'>{subtitle}</p>
+        <p className='mx-auto max-w-2xl text-xl text-purple-100'>{subtitle}</p>
       )}
     </section>
   );

@@ -1,1 +1,1 @@
-export const SWAP_TOKEN_FEE = 0.01;
+export const SWAP_FEE_BPS = 25;

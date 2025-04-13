@@ -1,3 +1,5 @@
+'use client'
+
 import dynamic from 'next/dynamic';
 import WalletButton from '@/components/ui/wallet-button';
 import dotenv from 'dotenv';
@@ -24,11 +26,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { formatNumber } from '@/libs/utils';
-import { ArrowLeftRight, FilterIcon, FilterX } from 'lucide-react';
+import { ArrowLeftRight, FilterIcon, FilterX, PlusIcon } from 'lucide-react';
 import Image from 'next/image';
-import { useRouter } from 'next/router';
 import { Label } from '@/components/ui/label';
 import { LiquidityPoolSortDto } from '@/libs/models/liquidity';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { isMobile } from 'react-device-detect';
+import { SwapTokenModal } from '@/components/ui/swap/swap-modal';
 
 dotenv.config();
 
@@ -41,15 +45,18 @@ function LiquidityPage() {
     threshold: 0,
   });
 
-  const queryClient = useQueryClient();
+  const { connected, publicKey } = useWallet();
 
-  const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [showFilter, setShowFilter] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
   const [type, setType] = useState<PoolFetchType>(PoolFetchType.All);
   const [sort, setSort] = useState<LiquidityPoolSortDto>('liquidity');
   const [order, setOrder] = useState<'asc' | 'desc' | undefined>('desc');
+  const [period, setPeriod] = useState<string>('24H');
+  const [openSwap, setOpenSwap] = useState<boolean>(false);
+  const [poolInfoBaseItem, setPoolInfoBaseItem] = useState<ApiV3PoolInfoItem>()
 
   const columnHelper = useMemo(
     () => createColumnHelper<ApiV3PoolInfoItem>(),
@@ -65,25 +72,25 @@ function LiquidityPage() {
         cell: (info) => (
           <div className='flex items-center justify-start gap-2'>
             <div className='relative flex flex-row items-center'>
-              <div className='relative w-6 h-6'>
+              <div className='relative h-6 w-6'>
                 {info?.row?.original?.mintA?.logoURI && (
                   <Image
                     src={info?.row?.original?.mintA?.logoURI}
                     alt={info?.row?.original?.mintA?.name}
                     width={20}
                     height={20}
-                    className='w-full h-full border-2 border-indigo-900 rounded-full shadow-lg'
+                    className='h-full w-full rounded-full border-2 border-indigo-900 shadow-lg'
                   />
                 )}
               </div>
-              <div className='relative w-6 h-6 -ml-2'>
+              <div className='relative -ml-2 h-6 w-6'>
                 {info?.row?.original?.mintB?.logoURI && (
                   <Image
                     src={info?.row?.original?.mintB?.logoURI}
                     alt={info?.row?.original?.mintB?.name}
                     width={20}
                     height={20}
-                    className='w-full h-full border-2 border-indigo-900 rounded-full shadow-lg'
+                    className='h-full w-full rounded-full border-2 border-indigo-900 shadow-lg'
                   />
                 )}
               </div>
@@ -111,7 +118,7 @@ function LiquidityPage() {
         id: 'day.volume',
         enableSorting: false,
         header: () => (
-          <span className='flex justify-end text-sm'>Volume 24H</span>
+          <span className='flex justify-end text-sm'>Volume {period}</span>
         ),
         cell: (info) => (
           <span className='flex justify-end text-sm'>
@@ -122,7 +129,7 @@ function LiquidityPage() {
       columnHelper.accessor((row) => row.day.volumeFee, {
         id: 'day.volumeFee',
         enableSorting: false,
-        header: () => <span className='flex justify-end text-sm'>Fee 24H</span>,
+        header: () => <span className='flex justify-end text-sm'>Fee {period}</span>,
         cell: (info) => (
           <span className='flex justify-end text-sm'>
             ${formatNumber(`${info.getValue()}`)}
@@ -132,7 +139,7 @@ function LiquidityPage() {
       columnHelper.accessor((row) => row.day.apr, {
         id: 'day.apr',
         enableSorting: false,
-        header: () => <span className='flex justify-end text-sm'>APR 24H</span>,
+        header: () => <span className='flex justify-end text-sm'>APR {period}</span>,
         cell: (info) => (
           <span className='flex justify-end text-sm'>
             {`${Number(info.getValue() * 100).toFixed(2)}%`}
@@ -154,20 +161,19 @@ function LiquidityPage() {
         cell: (info) => (
           <div className='flex justify-center' vocab={info.row.original.id}>
             <Button
-              className='px-2 py-1 leading-6 text-white rounded-md shadow-sm cursor-pointer bg-primary hover:bg-primary-hover'
+              className='bg-primary hover:bg-primary-hover cursor-pointer rounded-md px-2 py-1 leading-6 text-white shadow-sm'
               onClick={() => {
-                router.push({
-                  pathname: `/swap-token/${info?.row?.original?.id}`,
-                });
+                setOpenSwap(true);
+                setPoolInfoBaseItem(info.row.original)
               }}
             >
-              <ArrowLeftRight className='w-4 h-4' />
+              <ArrowLeftRight className='h-4 w-4' />
             </Button>
           </div>
         ),
       }),
     ],
-    [columnHelper, router]
+    [columnHelper, period]
   );
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
@@ -219,7 +225,7 @@ function LiquidityPage() {
   }, [type, sort, order, queryClient]);
 
   return (
-    <div className='min-h-screen text-white bg-gray-900'>
+    <div className='min-h-screen bg-gray-900 text-white'>
       <Header
         isLanding={false}
         title='Liquidity'
@@ -232,31 +238,33 @@ function LiquidityPage() {
         <WalletButton />
       </div>
 
-      <section className='px-4 py-2 bg-gray-800'>
-        <div className='max-w-6xl mx-auto'>
-          <div className='flex flex-row justify-between gap-2 my-2'>
+      <SwapTokenModal open={openSwap} setOpen={setOpenSwap} poolInfoBaseItem={poolInfoBaseItem} />
+
+      <section className='bg-gray-800 px-4 py-2'>
+        <div className='mx-auto md:max-w-6xl'>
+          <div className={`my-2 flex justify-between gap-2 md:flex-row ${showFilter && 'flex-col'}`}>
             <div className='flex flex-col gap-2'>
               <Button
                 onClick={(e) => {
                   e.preventDefault();
                   setShowFilter((prev) => !prev);
                 }}
-                className='w-32 cursor-pointer'
+                className={`cursor-pointer ${!showFilter || !isMobile ? 'w-32' : 'w-full'}`}
               >
                 {showFilter ? (
-                  <FilterX className='w-4 h-5' />
+                  <FilterX className='h-5 w-4' />
                 ) : (
-                  <FilterIcon className='w-4 h-4' />
+                  <FilterIcon className='h-4 w-4' />
                 )}
                 Filters
               </Button>
               {showFilter && (
-                <div className='flex flex-row gap-2 p-2 border-purple-900 rounded border-1'>
+                <div className='border-1 flex w-full flex-col gap-2 rounded border-purple-900 p-2 md:flex-row'>
                   <div className='flex flex-col gap-2'>
                     <span className='flex flex-row justify-center'>
                       <Label>Type</Label>
                     </span>
-                    <div className='flex flex-row gap-2'>
+                    <div className='flex flex-col gap-2 md:flex-row'>
                       <Button
                         onClick={(e) => {
                           e.preventDefault();
@@ -289,18 +297,25 @@ function LiquidityPage() {
                       </Button>
                     </div>
                   </div>
-                  <div className='flex flex-row justify-between gap-1'>
+                  <div className='flex flex-col justify-between gap-1 md:flex-row'>
                     <div className='flex flex-col gap-2'>
                       <span className='flex flex-row justify-center'>
                         <Label>Sort</Label>
                       </span>
                       <Select
-                        onValueChange={(value) =>
+                        onValueChange={(value) => {
+                          if (value.includes('24h')) {
+                            setPeriod('24H');
+                          } else if (value.includes('7d')) {
+                            setPeriod('7D');
+                          } else if (value.includes('30d')) {
+                            setPeriod('30D');
+                          }
                           setSort(value as LiquidityPoolSortDto)
-                        }
+                        }}
                         defaultValue={sort}
                       >
-                        <SelectTrigger className='w-[280px]'>
+                        <SelectTrigger className={`${showFilter ? 'w-full' : 'w-[280px]'}`}>
                           <SelectValue placeholder='Sort criteria' />
                         </SelectTrigger>
                         <SelectContent>
@@ -309,16 +324,16 @@ function LiquidityPage() {
                             <SelectItem value='volume24h'>
                               Volume 24h
                             </SelectItem>
-                            {/* <SelectItem value='volume7d'>Volume 7d</SelectItem>
+                            <SelectItem value='volume7d'>Volume 7d</SelectItem>
                             <SelectItem value='volume30d'>
                               Volume 30d
-                            </SelectItem> */}
+                            </SelectItem>
                             <SelectItem value='fee24h'>Fee 24h</SelectItem>
-                            {/* <SelectItem value='fee7d'>Fee 7d</SelectItem>
-                            <SelectItem value='fee30d'>Fee 30d</SelectItem> */}
+                            <SelectItem value='fee7d'>Fee 7d</SelectItem>
+                            <SelectItem value='fee30d'>Fee 30d</SelectItem>
                             <SelectItem value='apr24h'>APR 24h</SelectItem>
-                            {/* <SelectItem value='apr7d'>APR 7d</SelectItem>
-                            <SelectItem value='apr30d'>APR 30d</SelectItem> */}
+                            <SelectItem value='apr7d'>APR 7d</SelectItem>
+                            <SelectItem value='apr30d'>APR 30d</SelectItem>
                           </SelectGroup>
                         </SelectContent>
                       </Select>
@@ -333,7 +348,7 @@ function LiquidityPage() {
                         }
                         defaultValue={order}
                       >
-                        <SelectTrigger className='w-[280px]'>
+                        <SelectTrigger className={`${showFilter ? 'w-full' : 'w-[280px]'}`}>
                           <SelectValue placeholder='Order direction' />
                         </SelectTrigger>
                         <SelectContent>
@@ -349,18 +364,18 @@ function LiquidityPage() {
               )}
             </div>
             <span>
-              {/* <Button
+              {connected && publicKey && <Button
                 onClick={(e) => {
                   e.preventDefault();
                 }}
-                className='cursor-pointer'
+                className={`cursor-pointer ${!showFilter ? 'w-32' : 'w-full'}`}
               >
-                <PlusIcon className='w-4 h-4' />
+                <PlusIcon className='h-4 w-4' />
                 Create
-              </Button> */}
+              </Button>}
             </span>
           </div>
-          <div className='relative overflow-hidden border border-purple-900 rounded-lg shadow-lg'>
+          <div className='relative overflow-hidden rounded-lg border border-purple-900 shadow-lg'>
             <div className='absolute inset-0 shadow-[0_0_20px_5px_rgba(128,0,128,0.5)]'></div>
             <div className='overflow-auto bg-gray-800 bg-opacity-10 backdrop-blur-md'>
               <table className='min-w-full'>
@@ -400,7 +415,7 @@ function LiquidityPage() {
                         {row.getVisibleCells().map((cell) => (
                           <td
                             key={cell.id}
-                            className='p-2 border border-slate-700'
+                            className='border border-slate-700 p-2'
                           >
                             {flexRender(
                               cell.column.columnDef.cell,
@@ -417,24 +432,6 @@ function LiquidityPage() {
           <div ref={ref} className='flex flex-row justify-center py-4'>
             {isFetchingNextPage ? <Spinner /> : <></>}
           </div>
-          {/* {poolQuery.data?.hasNextPage && (
-            <div className='mt-4 text-center'>
-              <Button
-                onClick={(e) => {
-                  e.preventDefault();
-                  setPageSize((prev) => prev + 10);
-                  console.log('page', page, pageSize);
-                  queryClient.invalidateQueries({
-                    queryKey: ['getPoolList', page, pageSize],
-                  });
-                }}
-                disabled={!poolQuery.data.hasNextPage}
-                className='cursor-pointer'
-              >
-                {poolQuery.isLoading ? 'Loading...' : 'Load More'}
-              </Button>
-            </div>
-          )} */}
         </div>
       </section>
 
