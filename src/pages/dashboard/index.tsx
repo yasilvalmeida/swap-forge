@@ -1,5 +1,5 @@
 import dynamic from 'next/dynamic';
-import WalletButton from '@/components/ui/wallet-button';
+/* import WalletButton from '@/components/ui/wallet-button';
 import {
   ExternalLink,
   Plus,
@@ -10,11 +10,11 @@ import {
   CircleDollarSign,
   Coins,
   LineChart
-} from 'lucide-react';
+} from 'lucide-react'; */
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/router';
-import { useEffect, useMemo, useState } from 'react';
-import {
+import { useEffect, useState } from 'react';
+/* import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -26,12 +26,12 @@ import {
 } from '@/components/ui/dialog';
 import { copyToClipboard } from '@/libs/utils';
 import { Label } from '@radix-ui/react-label';
-import { Copy, LinkIcon, MoreVertical } from 'lucide-react';
+import { Copy, LinkIcon, MoreVertical } from 'lucide-react'; */
 import { toast } from 'react-toastify';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui//input';
-import { getCreatedTokenList, getWallet } from '@/libs/utils/wallet';
-import { REFERRAL_LINK } from '@/libs/constants';
+/* import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui//input'; */
+import { getWallet } from '@/libs/utils/wallet';
+/* import { REFERRAL_LINK } from '@/libs/constants';
 import { AffiliateProgramResume } from '@/components/layout/affiliate-program';
 import { TokenAccountDto } from '@/libs/models/wallet';
 import {
@@ -59,7 +59,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@/components/ui/table'; */
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 const Navbar = dynamic(() => import('@/components/layout/navbar'), {});
@@ -71,15 +71,15 @@ function DashboardPage() {
   const { connected, publicKey } = useWallet();
   const { connection } = useConnection();
   
-  const [openReferralModal, setOpenReferralModal] = useState<boolean>(false);
+  /* const [openReferralModal, setOpenReferralModal] = useState<boolean>(false);
   const [openCreatedToken, setOpenCreatedToken] = useState<boolean>(false);
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([]); */
   
-  const [referralCode, setReferralCode] = useState<string>();
-  const [createdTokens, setCreatedTokens] = useState<TokenAccountDto[]>([]);
+  /* const [referralCode, setReferralCode] = useState<string>();
+  const [createdTokens, setCreatedTokens] = useState<TokenAccountDto[]>([]); */
   const [balance, setBalance] = useState<string>('');
 
-  const columns: ColumnDef<TokenAccountDto>[] = useMemo(() => {
+  /* const columns: ColumnDef<TokenAccountDto>[] = useMemo(() => {
     return [
       {
         accessorKey: 'tokenPublicKey',
@@ -147,8 +147,8 @@ function DashboardPage() {
       },
     ];
   }, []);
-
-  const table = useReactTable({
+ */
+  /* const table = useReactTable({
     data: createdTokens,
     columns,
     onSortingChange: setSorting,
@@ -158,7 +158,7 @@ function DashboardPage() {
     state: {
       sorting,
     },
-  });
+  }); */
 
   useEffect(() => {
     getBalance();
@@ -182,9 +182,9 @@ function DashboardPage() {
       if (publicKey) {
         const wallet = await getWallet(publicKey.toBase58());
         if (wallet?._id) {
-          setReferralCode(wallet?.referralCode);
+          /* setReferralCode(wallet?.referralCode);
           const createdTokenList = await getCreatedTokenList(wallet?._id);
-          setCreatedTokens(createdTokenList || []);
+          setCreatedTokens(createdTokenList || []); */
         }
       }
     }
