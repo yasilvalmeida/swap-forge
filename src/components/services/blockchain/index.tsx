@@ -6,8 +6,6 @@ import * as anchor from '@coral-xyz/anchor';
 import { TokenContract } from '../../../../smart-contract/token/types/token_contract';
 import idl from '../../../../smart-contract/token/idl/token_contract.json';
 
-
-let tx: string;
 const RPC_URL: string = process.env.NEXT_PUBLIC_SOLANA_ENDPOINT || 'https://api.devnet.solana.com';
 
 export const getProvider = (
@@ -24,28 +22,6 @@ export const getProvider = (
   const provider = new AnchorProvider(
     connection,
     { publicKey, signTransaction, sendTransaction } as unknown as Wallet,
-    { commitment: 'processed'}
-  )
-
-  return new Program<TokenContract>(idl as unknown, provider);
-}
-
-export const getProviderReadonly = (): Program<TokenContract> | null => { 
-  
-  const wallet = {
-    publicKey: PublicKey.default,
-    signTransaction: async () => {
-      throw new Error('Read-only provider cannont sign transaction.')
-    },
-    signAllTransaction: async () => {
-      throw new Error('Read-only provider cannont sign any transaction.')
-    }
-  }
-
-  const connection = new Connection(RPC_URL);
-  const provider = new AnchorProvider(
-    connection,
-    wallet as unknown as Wallet,
     { commitment: 'processed'}
   )
 
@@ -74,7 +50,7 @@ export const createTokenFromContract = async (
   ],
     TOKEN_METADATA_PROGRAM_ID);
   
-  const transaction = await program.methods
+  const tx = await program.methods
     .createToken(
       name,
       symbol,
@@ -90,27 +66,11 @@ export const createTokenFromContract = async (
       mint: mintKeypair.publicKey,
       metadata,
     })
-    .transaction();
-  
-  // Get connection
-  const latestBlockHash = await program.provider.connection.getLatestBlockhash();
-  // Set transaction parameters
-  transaction.feePayer = walletPublicKey;
-  transaction.recentBlockhash = latestBlockHash.blockhash;
-  transaction.sign(mintKeypair)
-
-  // Sign the transaction
-  const signedTx = await program.provider.wallet!.signTransaction(transaction);
-
-  // Send and confirm the transaction
-  const rawTransaction = signedTx.serialize();
-  tx = await program.provider.connection.sendRawTransaction(rawTransaction);
-
-  await program.provider.connection.confirmTransaction({
-    signature: tx,
-    blockhash: latestBlockHash.blockhash,
-    lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-  });
+    .signers([mintKeypair])
+    .rpc({
+      skipPreflight: false,
+      commitment: 'confirmed'
+    });
   
   return { tx, mint: mintKeypair.publicKey.toBase58() };
 }

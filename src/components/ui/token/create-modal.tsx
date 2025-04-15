@@ -7,7 +7,6 @@ import { AlignVerticalDistributeEnd, Copy, LinkIcon } from "lucide-react";
 import { Dispatch, SetStateAction } from "react";
 import { toast } from "react-toastify";
 import Link from "next/link";
-import { RAYDIUM_LIQUIDITY_URL } from "@/libs/constants/token";
 import Spinner from "../spinner";
 import { TokenCreateWidget, TokenCreateWidgetProps } from "./creation-widget";
 
@@ -86,8 +85,7 @@ export const TokenCreateModal = ({ open, setOpen, token, title, signature, loadi
           {token && (
             <div className='flex justify-center'>
               <Link
-                href={RAYDIUM_LIQUIDITY_URL}
-                target='_blank'
+                href='/liquidity'
                 className='cursor-pointer'
               >
                 <span className='text-xs flex items-center gap-1 text-yellow-400 underline'>

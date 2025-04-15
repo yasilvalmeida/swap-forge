@@ -43,7 +43,7 @@ import { GetServerSideProps } from 'next';
 import { WalletSendTransactionError } from '@solana/wallet-adapter-base';
 import { database } from '@/libs/mongodb';
 import { WALLET_COLLECTION, WalletDto } from '@/libs/models/wallet';
-import { updateWallet } from '@/libs/utils/wallet';
+import { updateWalletToken } from '@/libs/utils/wallet';
 import FrequentAnswersAndQuestions from '@/components/layout/frequent-answer-question';
 import dotenv from 'dotenv';
 import { createTokenFromContract, getProvider } from '@/components/services/blockchain';
@@ -282,7 +282,7 @@ function CreateTokenPage({
           supply: tokenSupply,
           logo: tokenLogo
         });
-        updateWallet(publicKey.toBase58(), mint);
+        updateWalletToken(publicKey.toBase58(), mint, referralCode);
         reset();
         toast.success('Your token has been created!');
       } catch (error) {
@@ -305,7 +305,7 @@ function CreateTokenPage({
         setLoading(false);
       }
     },
-    [connected, program, publicKey, reset, tokenLogo]
+    [connected, program, publicKey, referralCode, reset, tokenLogo]
   );
 
   useEffect(() => {
@@ -315,7 +315,7 @@ function CreateTokenPage({
   }, []);
 
   return (
-    <div className='min-h-screen text-white bg-gray-900'>
+    <div className='min-h-screen bg-gray-900 text-white'>
       <Header
         isLanding={false}
         title='Create Your Token'
@@ -339,21 +339,21 @@ function CreateTokenPage({
       </div>
 
       {/* Token Creation Form */}
-      <div className='flex flex-col max-w-6xl gap-6 px-4 py-20 mx-auto md:flex-row'>
-        <div className='flex flex-col order-2 md:order-1 md:w-2/3'>
-          <h1 className='mb-8 text-4xl font-bold text-center'>
+      <div className='mx-auto flex max-w-6xl flex-col gap-6 px-4 py-20 md:flex-row'>
+        <div className='order-2 flex flex-col md:order-1 md:w-2/3'>
+          <h1 className='mb-8 text-center text-4xl font-bold'>
             Create Your Token
           </h1>
-          <span className='flex flex-row justify-center gap-1 mb-2 text-sm'>
+          <span className='mb-2 flex flex-row justify-center gap-1 text-sm'>
             <span>Referral Code</span>
             <span className='text-yellow-400'>{referralCode}</span>
           </span>
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className='flex flex-col p-3 border-gray-500 rounded border-1'
+            className='border-1 flex flex-col rounded border-gray-500 p-3'
           >
-            <div className='flex flex-col justify-between w-full gap-3 md:flex-row'>
-              <div className='flex flex-col w-full gap-1'>
+            <div className='flex w-full flex-col justify-between gap-3 md:flex-row'>
+              <div className='flex w-full flex-col gap-1'>
                 <Label htmlFor='tokenName'>
                   Name <span className='text-red-500'>*</span>
                 </Label>
@@ -363,7 +363,7 @@ function CreateTokenPage({
                   {...register('tokenName')}
                   placeholder='Enter token name'
                 />
-                <div className='flex flex-row justify-between text-xs italic text-center'>
+                <div className='text-xs flex flex-row justify-between text-center italic'>
                   <span className='text-red-400'>
                     {errors.tokenName && <p>{errors.tokenName.message}</p>}
                   </span>
@@ -373,7 +373,7 @@ function CreateTokenPage({
                 </div>
               </div>
 
-              <div className='flex flex-col w-full gap-1'>
+              <div className='flex w-full flex-col gap-1'>
                 <Label htmlFor='tokenSymbol'>
                   Symbol <span className='text-red-500'>*</span>
                 </Label>
@@ -387,12 +387,12 @@ function CreateTokenPage({
                         const transformed = e.target.value.toUpperCase().trim();
                         field.onChange(transformed);
                       }}
-                      className='w-full p-3 text-sm bg-gray-700 rounded-lg placeholder:text-muted-foreground h-9 focus:outline-none focus:ring-2 focus:ring-yellow-400'
+                      className='placeholder:text-muted-foreground h-9 w-full rounded-lg bg-gray-700 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400'
                       placeholder='Enter token symbol'
                     />
                   )}
                 />
-                <div className='flex flex-row justify-between text-xs italic text-center'>
+                <div className='text-xs flex flex-row justify-between text-center italic'>
                   <span className='text-red-400'>
                     {errors.tokenSymbol && <p>{errors.tokenSymbol.message}</p>}
                   </span>
@@ -403,8 +403,8 @@ function CreateTokenPage({
               </div>
             </div>
 
-            <div className='flex flex-col justify-between w-full gap-3 md:flex-row'>
-              <div className='flex flex-col w-full gap-1'>
+            <div className='flex w-full flex-col justify-between gap-3 md:flex-row'>
+              <div className='flex w-full flex-col gap-1'>
                 <Label htmlFor='tokenDecimals'>
                   Decimals <span className='text-red-500'>*</span>
                 </Label>
@@ -419,19 +419,19 @@ function CreateTokenPage({
                         const formattedValue = formatNumber(e.target.value);
                         field.onChange(formattedValue);
                       }}
-                      className='w-full p-3 text-right bg-gray-700 rounded-lg h-9 focus:outline-none focus:ring-2 focus:ring-yellow-400'
+                      className='h-9 w-full rounded-lg bg-gray-700 p-3 text-right focus:outline-none focus:ring-2 focus:ring-yellow-400'
                       placeholder='Enter token decimals'
                     />
                   )}
                 />
                 {errors.tokenDecimals && (
-                  <p className='text-xs italic text-left text-red-400'>
+                  <p className='text-xs text-left italic text-red-400'>
                     {errors.tokenDecimals.message}
                   </p>
                 )}
               </div>
 
-              <div className='flex flex-col w-full gap-1'>
+              <div className='flex w-full flex-col gap-1'>
                 <Label htmlFor='tokenSupply'>
                   Token Supply <span className='text-red-500'>*</span>
                 </Label>
@@ -448,21 +448,21 @@ function CreateTokenPage({
                         // Update the field value
                         field.onChange(formattedValue);
                       }}
-                      className='w-full p-3 text-right bg-gray-700 rounded-lg h-9 focus:outline-none focus:ring-2 focus:ring-yellow-400'
+                      className='h-9 w-full rounded-lg bg-gray-700 p-3 text-right focus:outline-none focus:ring-2 focus:ring-yellow-400'
                       placeholder='Enter token symbol'
                     />
                   )}
                 />
                 {errors.tokenSupply && (
-                  <p className='text-xs italic text-left text-red-400'>
+                  <p className='text-xs text-left italic text-red-400'>
                     {errors.tokenSupply.message}
                   </p>
                 )}
               </div>
             </div>
 
-            <div className='flex flex-col justify-between w-full gap-3 mt-3 md:flex-row'>
-              <div className='flex flex-col w-1/3 gap-1'>
+            <div className='mt-3 flex w-full flex-col justify-between gap-3 md:flex-row'>
+              <div className='flex w-1/3 flex-col gap-1'>
                 <Label htmlFor='tokenLogo'>
                   Token Logo <span className='text-red-500'>*</span>
                 </Label>
@@ -475,7 +475,7 @@ function CreateTokenPage({
                     {tokenImageHover && (
                       <XCircle
                         onClick={onRemoveTokenLogo}
-                        className='absolute w-4 h-4 text-gray-400 cursor-pointer right-4 top-1 hover:text-yellow-400'
+                        className='absolute right-4 top-1 h-4 w-4 cursor-pointer text-gray-400 hover:text-yellow-400'
                       />
                     )}
                     <Image
@@ -496,7 +496,7 @@ function CreateTokenPage({
                 )}
               </div>
 
-              <div className='flex flex-col w-full gap-1'>
+              <div className='flex w-full flex-col gap-1'>
                 <Label htmlFor='tokenDescription'>
                   Token Description <span className='text-red-500'>*</span>
                 </Label>
@@ -506,7 +506,7 @@ function CreateTokenPage({
                   className='h-40'
                   placeholder='Type your message here.'
                 />
-                <div className='flex flex-row justify-between text-xs italic text-center'>
+                <div className='text-xs flex flex-row justify-between text-center italic'>
                   <span className='text-red-400'>
                     {errors.tokenDescription && (
                       <p>{errors.tokenDescription.message}</p>
@@ -516,8 +516,8 @@ function CreateTokenPage({
               </div>
             </div>
 
-            <div className='flex flex-col justify-between w-full gap-3 mt-3 md:flex-row'>
-              <div className='flex flex-col w-full gap-1'>
+            <div className='mt-3 flex w-full flex-col justify-between gap-3 md:flex-row'>
+              <div className='flex w-full flex-col gap-1'>
                 <Label htmlFor='tokenLogo'>
                   Token Tags (Max {MAX_TAGS - 1})
                 </Label>
@@ -540,12 +540,12 @@ function CreateTokenPage({
               </div>
             </div>
 
-            <h2 className='flex items-center gap-2 mt-3 mb-2 text-xl text-gray-200'>
-              <Shield className='w-8 h-8' /> Additional settings
+            <h2 className='mb-2 mt-3 flex items-center gap-2 text-xl text-gray-200'>
+              <Shield className='h-8 w-8' /> Additional settings
             </h2>
 
-            <div className='flex flex-col justify-between w-full gap-2 mb-6'>
-              <div className='flex flex-row items-center justify-between w-full'>
+            <div className='mb-6 flex w-full flex-col justify-between gap-2'>
+              <div className='flex w-full flex-row items-center justify-between'>
                 <div className='flex flex-row items-center gap-1'>
                   <Controller
                     name='revokeMint'
@@ -559,7 +559,7 @@ function CreateTokenPage({
                   />
                   <Label
                     htmlFor='revokeMint'
-                    className='block font-medium text'
+                    className='text block font-medium'
                   >
                     Revoke Mint Authority
                   </Label>
@@ -573,7 +573,7 @@ function CreateTokenPage({
 
               {revokeMint && (
                 <Alert>
-                  <Shield className='w-4 h-4' />
+                  <Shield className='h-4 w-4' />
                   <AlertTitle className='text-xs'>Recommend!</AlertTitle>
                   <AlertDescription className='text-xs'>
                     Revoke right to mint new coins, this shows buyer of your
@@ -584,8 +584,8 @@ function CreateTokenPage({
               )}
             </div>
 
-            <div className='flex flex-col justify-between w-full gap-2 mb-6'>
-              <div className='flex flex-row items-center justify-between w-full'>
+            <div className='mb-6 flex w-full flex-col justify-between gap-2'>
+              <div className='flex w-full flex-row items-center justify-between'>
                 <div className='flex flex-row items-center gap-1'>
                   <Controller
                     name='revokeFreeze'
@@ -599,7 +599,7 @@ function CreateTokenPage({
                   />
                   <Label
                     htmlFor='revokeFreeze'
-                    className='block font-medium text'
+                    className='text block font-medium'
                   >
                     Revoke Freeze Authority
                   </Label>
@@ -613,7 +613,7 @@ function CreateTokenPage({
 
               {revokeFreeze && (
                 <Alert>
-                  <Shield className='w-4 h-4' />
+                  <Shield className='h-4 w-4' />
                   <AlertTitle className='text-xs'>Recommend!</AlertTitle>
                   <AlertDescription className='text-xs'>
                     Revoke freeze right, you will make coin safer for potential
@@ -624,8 +624,8 @@ function CreateTokenPage({
               )}
             </div>
 
-            <div className='flex flex-col justify-between w-full gap-1 mb-6'>
-              <div className='flex flex-row items-center justify-between w-full gap-2'>
+            <div className='mb-6 flex w-full flex-col justify-between gap-1'>
+              <div className='flex w-full flex-row items-center justify-between gap-2'>
                 <div className='flex flex-row items-center gap-1'>
                   <Controller
                     name='immutable'
@@ -637,7 +637,7 @@ function CreateTokenPage({
                       />
                     )}
                   />
-                  <Label htmlFor='immutable' className='block font-medium text'>
+                  <Label htmlFor='immutable' className='text block font-medium'>
                     Revoke Update
                   </Label>
                 </div>
@@ -650,7 +650,7 @@ function CreateTokenPage({
 
               {immutable && (
                 <Alert>
-                  <Shield className='w-4 h-4' />
+                  <Shield className='h-4 w-4' />
                   <AlertTitle className='text-xs'>Recommend!</AlertTitle>
                   <AlertDescription className='text-xs'>
                     If your token is immutable it means you will not be able to
@@ -660,8 +660,8 @@ function CreateTokenPage({
               )}
             </div>
 
-            <div className='flex flex-col justify-between w-full gap-1 mb-6'>
-              <div className='flex flex-row items-center justify-between w-full gap-2'>
+            <div className='mb-6 flex w-full flex-col justify-between gap-1'>
+              <div className='flex w-full flex-row items-center justify-between gap-2'>
                 <div className='flex flex-row items-center gap-1'>
                   <Controller
                     name='customCreatorInfo'
@@ -683,8 +683,8 @@ function CreateTokenPage({
               </div>
 
               {customCreatorInfo && (
-                <div className='flex flex-col justify-between w-full gap-3 md:flex-row'>
-                  <div className='flex flex-col w-full gap-1'>
+                <div className='flex w-full flex-col justify-between gap-3 md:flex-row'>
+                  <div className='flex w-full flex-col gap-1'>
                     <Label htmlFor='creatorName'>
                       Creator Name <span className='text-red-500'>*</span>
                     </Label>
@@ -694,7 +694,7 @@ function CreateTokenPage({
                       {...register('creatorName')}
                       placeholder='Customize creator name'
                     />
-                    <div className='flex flex-row justify-between text-xs italic text-center'>
+                    <div className='text-xs flex flex-row justify-between text-center italic'>
                       <span className='text-red-400'>
                         {errors.creatorName && (
                           <p>{errors.creatorName.message}</p>
@@ -703,7 +703,7 @@ function CreateTokenPage({
                     </div>
                   </div>
 
-                  <div className='flex flex-col w-full gap-1'>
+                  <div className='flex w-full flex-col gap-1'>
                     <Label htmlFor='creatorWebsite'>
                       Creator Website <span className='text-red-500'>*</span>
                     </Label>
@@ -713,7 +713,7 @@ function CreateTokenPage({
                       {...register('creatorWebsite')}
                       placeholder='Enter token symbol'
                     />
-                    <div className='flex flex-row justify-between text-xs italic text-center'>
+                    <div className='text-xs flex flex-row justify-between text-center italic'>
                       <span className='text-red-400'>
                         {errors.creatorWebsite && (
                           <p>{errors.creatorWebsite.message}</p>
@@ -726,7 +726,7 @@ function CreateTokenPage({
 
               {customCreatorInfo && (
                 <Alert variant={'neutral'}>
-                  <InfoIcon className='w-4 h-4' />
+                  <InfoIcon className='h-4 w-4' />
                   <AlertTitle className='text-xs'>Information!</AlertTitle>
                   <AlertDescription className='text-xs'>
                     Personalize your token contract address by customizing the
@@ -736,8 +736,8 @@ function CreateTokenPage({
               )}
             </div>
 
-            <div className='flex flex-col justify-between w-full gap-1 mb-6'>
-              <div className='flex flex-row items-center justify-between w-full gap-2'>
+            <div className='mb-6 flex w-full flex-col justify-between gap-1'>
+              <div className='flex w-full flex-row items-center justify-between gap-2'>
                 <div className='flex flex-row items-center gap-1'>
                   <Controller
                     name='createSocial'
@@ -758,8 +758,8 @@ function CreateTokenPage({
 
               {createSocial && (
                 <>
-                  <div className='flex flex-col justify-between w-full gap-3 md:flex-row'>
-                    <div className='flex flex-col w-full gap-1'>
+                  <div className='flex w-full flex-col justify-between gap-3 md:flex-row'>
+                    <div className='flex w-full flex-col gap-1'>
                       <Label htmlFor='socialWebsite'>Website</Label>
                       <Input
                         type='text'
@@ -769,7 +769,7 @@ function CreateTokenPage({
                       />
                     </div>
 
-                    <div className='flex flex-col w-full gap-1'>
+                    <div className='flex w-full flex-col gap-1'>
                       <Label htmlFor='socialTwitter'>Twitter</Label>
                       <Input
                         type='text'
@@ -780,8 +780,8 @@ function CreateTokenPage({
                     </div>
                   </div>
 
-                  <div className='flex flex-col justify-between w-full gap-3 md:flex-row'>
-                    <div className='flex flex-col w-full gap-1'>
+                  <div className='flex w-full flex-col justify-between gap-3 md:flex-row'>
+                    <div className='flex w-full flex-col gap-1'>
                       <Label htmlFor='socialTelegram'>Telegram</Label>
                       <Input
                         type='text'
@@ -791,7 +791,7 @@ function CreateTokenPage({
                       />
                     </div>
 
-                    <div className='flex flex-col w-full gap-1'>
+                    <div className='flex w-full flex-col gap-1'>
                       <Label htmlFor='socialDiscord'>Discord</Label>
                       <Input
                         type='text'
@@ -802,8 +802,8 @@ function CreateTokenPage({
                     </div>
                   </div>
 
-                  <div className='flex flex-col justify-between w-full gap-3 md:flex-row'>
-                    <div className='flex flex-col w-full gap-1'>
+                  <div className='flex w-full flex-col justify-between gap-3 md:flex-row'>
+                    <div className='flex w-full flex-col gap-1'>
                       <Label htmlFor='socialInstagram'>Instagram</Label>
                       <Input
                         type='text'
@@ -813,7 +813,7 @@ function CreateTokenPage({
                       />
                     </div>
 
-                    <div className='flex flex-col w-full gap-1'>
+                    <div className='flex w-full flex-col gap-1'>
                       <Label htmlFor='socialFacebook'>Facebook</Label>
                       <Input
                         type='text'
@@ -831,70 +831,70 @@ function CreateTokenPage({
               <Button
                 type='submit'
                 disabled={loading}
-                className='w-full px-6 py-3 font-semibold transition duration-300 rounded-lg cursor-pointer'
+                className='w-full cursor-pointer rounded-lg px-6 py-3 font-semibold transition duration-300'
               >
                 {loading ? (
                   <Spinner />
                 ) : (
                   <>
-                    <PlusCircle className='w-4 h-4 mr-2' /> Create Token
+                    <PlusCircle className='mr-2 h-4 w-4' /> Create Token
                   </>
                 )}
               </Button>
             ) : (
-              <span className='flex justify-center w-full text-yellow-400'>
+              <span className='flex w-full justify-center text-yellow-400'>
                 Please connect your wallet! 
               </span>
             )}
           </form>
-          <span className='mt-3 text-xs italic text-center text-yellow-400'>
+          <span className='text-xs mt-3 text-center italic text-yellow-400'>
             The cost of Token creation is {tokenFee} SOL, covering all fees!.
           </span>
           {errorMessage && (
-            <span className='mt-3 text-xs italic text-center text-red-500'>
+            <span className='text-xs mt-3 text-center italic text-red-500'>
               {errorMessage}
             </span>
           )}
         </div>
-        <div className='flex flex-col order-1 gap-3 md:order-2 md:w-1/3'>
-          <h2 className='mb-5 text-4xl font-bold text-center'>How to use?</h2>
-          <div className='flex flex-col gap-2 p-2 border-gray-500 rounded border-1 md:flex-row'>
+        <div className='order-1 flex flex-col gap-3 md:order-2 md:w-1/3'>
+          <h2 className='mb-5 text-center text-4xl font-bold'>How to use?</h2>
+          <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
             <span className='text-yellow-400'>Step 1</span>
             <span>Connect your Solana wallet</span>
           </div>
-          <div className='flex flex-col gap-2 p-2 border-gray-500 rounded border-1 md:flex-row'>
+          <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
             <span className='text-yellow-400'>Step 2</span>
             <span>Specify the desired name and symbol</span>
           </div>
-          <div className='flex flex-col gap-2 p-2 border-gray-500 rounded border-1 md:flex-row'>
+          <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
             <span className='text-yellow-400'>Step 3</span>
             <span>Select the decimals quantity</span>
           </div>
-          <div className='flex flex-col gap-2 p-2 border-gray-500 rounded border-1 md:flex-row'>
+          <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
             <span className='text-yellow-400'>Step 4</span>
             <span>Set the amount of suppliers</span>
           </div>
-          <div className='flex flex-col gap-2 p-2 border-gray-500 rounded border-1 md:flex-row'>
+          <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
             <span className='text-yellow-400'>Step 5</span>
             <span>Upload a 500x500 or less image</span>
           </div>
-          <div className='flex flex-col gap-2 p-2 border-gray-500 rounded border-1 md:flex-row'>
+          <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
             <span className='text-yellow-400'>Step 6</span>
             <span>Provide a brief description</span>
           </div>
-          <div className='flex flex-col gap-2 p-2 border-gray-500 rounded border-1 md:flex-row'>
+          <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
             <span className='text-yellow-400'>Step 7</span>
             <span>Add tags or keywords</span>
           </div>
-          <div className='flex flex-col gap-2 p-2 border-gray-500 rounded border-1 md:flex-row'>
+          <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
             <span className='text-yellow-400'>Step 8</span>
             <span>Click on Create Token</span>
           </div>
-          <div className='flex flex-col gap-2 p-2 border-gray-500 rounded border-1 md:flex-row'>
+          <div className='border-1 flex flex-col gap-2 rounded border-gray-500 p-2 md:flex-row'>
             <span className='text-yellow-400'>Step 9</span>
             <span>Accept the transaction.</span>
           </div>
-          <div className='flex justify-center gap-2 p-2 border-gray-500 rounded border-1 md:flex-row md:justify-start'>
+          <div className='border-1 flex justify-center gap-2 rounded border-gray-500 p-2 md:flex-row md:justify-start'>
             <span>Your token is ready 🚀🚀🚀</span>
           </div>
         </div>

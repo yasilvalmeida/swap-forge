@@ -2,6 +2,8 @@ import { ObjectId } from 'mongodb';
 
 export const WALLET_COLLECTION = 'wallet';
 export const TOKEN_COLLECTION = 'token';
+export const LIQUIDITY_COLLECTION = 'liquidity';
+export const SWAP_COLLECTION = 'swap';
 
 export type WalletDto = {
   _id: ObjectId;
@@ -19,10 +21,36 @@ export type TokenAccountDto = {
   createdAt: Date;
 };
 
-export type WalletRequestDto = {
+export type LiquidityDto = {
+  _id?: ObjectId;
+  walletId: ObjectId;
+  walletAddress: string;
+  liquidityKey: string;
+  createdAt: Date;
+};
+
+export type SwapDto = {
+  _id?: ObjectId;
+  walletId: ObjectId;
+  walletAddress: string;
+  swapKey: string;
+  createdAt: Date;
+};
+
+export type WalletTokenRequestDto = {
   walletAddress: string;
   tokenPublicKey: string;
   referralCode?: string;
+};
+
+export type WalletLiquidityRequestDto = {
+  walletAddress: string;
+  liquidityKey: string;
+};
+
+export type WalletSwapRequestDto = {
+  walletAddress: string;
+  swapKey: string;
 };
 
 export type WalletGetResponseDto = {
@@ -39,4 +67,12 @@ export type WalletGetReferralsResponseDto = {
 
 export type WalletCreatedTokenListResponseDto = {
   createdTokenList: TokenAccountDto[];
+};
+
+export type WalletCreatedLiquidityListResponseDto = {
+  createdLiquidityList: LiquidityDto[];
+};
+
+export type WalletCreatedSwapListResponseDto = {
+  createdSwapList: SwapDto[];
 };

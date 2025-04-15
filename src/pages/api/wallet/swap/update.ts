@@ -8,13 +8,12 @@ import {
 } from '@/libs/constants/http';
 import {
   WALLET_COLLECTION,
-  TOKEN_COLLECTION,
   WalletDto,
-  WalletRequestDto,
-  TokenAccountDto,
+  WalletSwapRequestDto,
+  SWAP_COLLECTION,
+  SwapDto,
 } from '@/libs/models/wallet';
 import { ErrorResponseDto, SuccessResponseDto } from '@/libs/models';
-import { v4 as uuidv4 } from 'uuid';
 
 export default async function handler(
   req: NextApiRequest,
@@ -27,8 +26,7 @@ export default async function handler(
         .json({ error: 'Method not allowed' });
     }
 
-    const { walletAddress, tokenPublicKey, referralCode }: WalletRequestDto =
-      req.body;
+    const { walletAddress, swapKey }: WalletSwapRequestDto = req.body;
 
     if (!walletAddress) {
       return res
@@ -36,11 +34,6 @@ export default async function handler(
         .json({ error: 'Wallet address is required' });
     }
 
-    const referralWallet = await database
-      .collection<WalletDto>(WALLET_COLLECTION)
-      .findOne({
-        referralCode,
-      });
     let wallet = await database
       .collection<WalletDto>(WALLET_COLLECTION)
       .findOne({
@@ -48,16 +41,12 @@ export default async function handler(
       });
 
     if (!wallet) {
-      const referralCode = uuidv4();
       await database.collection<WalletDto>(WALLET_COLLECTION).updateOne(
         { walletAddress },
         {
           $set: {
             walletAddress,
-            referralCode,
-            referralBy: referralWallet?.publicAddress,
           },
-          $inc: { tokensCreated: 1 },
         },
         { upsert: true }
       );
@@ -65,28 +54,20 @@ export default async function handler(
       wallet = await database.collection<WalletDto>(WALLET_COLLECTION).findOne({
         walletAddress,
       });
-    } else {
-      await database.collection<WalletRequestDto>(WALLET_COLLECTION).updateOne(
-        { walletAddress },
-        {
-          $inc: { tokensCreated: 1 },
-        },
-        { upsert: true }
-      );
-    }
+    } 
 
     if (wallet) {
-      await database.collection<TokenAccountDto>(TOKEN_COLLECTION).insertOne({
+      await database.collection<SwapDto>(SWAP_COLLECTION).insertOne({
         walletId: wallet?._id,
         walletAddress,
-        tokenPublicKey,
+        swapKey,
         createdAt: new Date(),
       });
     }
 
     return res
       .status(HTTP_SUCCESS)
-      .json({ message: 'Update wallet successful' });
+      .json({ message: 'Update wallet swap successful' });
   } catch (error) {
     console.error(error);
     return res

@@ -1,20 +1,54 @@
-import { WalletCreatedTokenListResponseDto, WalletDto, WalletGetResponseDto } from '@/libs/models/wallet';
+import {
+  WalletCreatedLiquidityListResponseDto,
+  WalletCreatedSwapListResponseDto,
+  WalletCreatedTokenListResponseDto,
+  WalletDto,
+  WalletGetResponseDto
+} from '@/libs/models/wallet';
 import axios from 'axios';
 import { ObjectId } from 'mongodb';
 
-export const updateWallet = async (
+export const updateWalletToken = async (
   walletAddress: string,
   tokenPublicKey: string,
   referralCode?: string
 ) => {
   try {
-    await axios.post('/api/wallet/update', {
+    await axios.post('/api/wallet/token/update', {
       walletAddress,
       tokenPublicKey,
       referralCode,
     });
   } catch (error) {
-    console.log('error-wallet-update', error);
+    console.log('error-wallet-token-update', error);
+  }
+};
+
+export const updateWalletLiquidity = async (
+  walletAddress: string,
+  liquidityKey: string
+) => {
+  try {
+    await axios.post('/api/wallet/liquidity/update', {
+      walletAddress,
+      liquidityKey,
+    });
+  } catch (error) {
+    console.log('error-wallet-liquidity-update', error);
+  }
+};
+
+export const updateWalletSwap = async (
+  walletAddress: string,
+  swapKey: string
+) => {
+  try {
+    await axios.post('/api/wallet/swap/update', {
+      walletAddress,
+      swapKey,
+    });
+  } catch (error) {
+    console.log('error-wallet-swap-update', error);
   }
 };
 
@@ -80,5 +114,43 @@ export const getCreatedTokenList = async (walletId: ObjectId) => {
     return createdTokenList;
   } catch (error) {
     console.log('error-get-wallet-token-list', error);
+  }
+};
+
+export const getCreatedLiquidityList = async (walletId: ObjectId) => {
+  try {
+    const createdLiquidityListResponse =
+      await axios.get<WalletCreatedLiquidityListResponseDto>(
+        `/api/wallet/liquidity/list`,
+        {
+          params: {
+            walletId,
+          },
+        }
+      );
+
+    const { createdLiquidityList } = createdLiquidityListResponse.data;
+    return createdLiquidityList;
+  } catch (error) {
+    console.log('error-get-wallet-liquidity-list', error);
+  }
+};
+
+export const getCreatedSwapList = async (walletId: ObjectId) => {
+  try {
+    const createdSwapListResponse =
+      await axios.get<WalletCreatedSwapListResponseDto>(
+        `/api/wallet/swap/list`,
+        {
+          params: {
+            walletId,
+          },
+        }
+      );
+
+    const { createdSwapList } = createdSwapListResponse.data;
+    return createdSwapList;
+  } catch (error) {
+    console.log('error-get-wallet-swap-list', error);
   }
 };
