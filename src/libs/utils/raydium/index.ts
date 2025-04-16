@@ -63,6 +63,7 @@ const getPoolList = async (props?: FetchPoolParams) => {
       return { ...pools };
     }
   } catch (error) {
+    console.log('error', error)
     toast.error(`Error fetching pool list: ${JSON.stringify(error)}`);
   }
 };
