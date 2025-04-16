@@ -7,19 +7,17 @@ import {
   Coins,
   Share2Icon,
 } from 'lucide-react';
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { copyToClipboard } from '@/libs/utils';
 import { Copy, LinkIcon } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Button } from '@/components/ui/button';
-import { getCreatedLiquidityList, getCreatedSwapList, getCreatedTokenList, getWallet } from '@/libs/utils/wallet';
-import { LiquidityDto, SwapDto, TokenAccountDto } from '@/libs/models/wallet';
-import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { ReceiveModal } from '@/components/ui/dashboard/receive-modal';
 import Link from 'next/link';
 import { REFERRAL_LINK } from '@/libs/constants';
+import { useWalletInfo } from '@/components/hook';
 
 const Navbar = dynamic(() => import('@/components/layout/navbar'), {});
 const Header = dynamic(() => import('@/components/layout/header'), {});
@@ -28,49 +26,9 @@ const Footer = dynamic(() => import('@/components/layout/footer'), {});
 function DashboardPage() {
   const router = useRouter();
   const { connected, publicKey } = useWallet();
-  const { connection } = useConnection();
-  
+  const { referralCode, createdTokens, createdLiquidityPools, createdSwaps, balance } = useWalletInfo();
+
   const [openReceiveModal, setOpenReceiveModal] = useState<boolean>(false);
-  
-  const [referralCode, setReferralCode] = useState<string>();
-  const [createdTokens, setCreatedTokens] = useState<TokenAccountDto[]>([]);
-  const [createdLiquidities, setCreatedLiquidities] = useState<LiquidityDto[]>([]);
-  const [createdSwaps, setCreatedSwaps] = useState<SwapDto[]>([]);
-  const [balance, setBalance] = useState<string>('');
-
-  useEffect(() => {
-    getBalance();
-    getWalletInfo();
-    return () => {};
-
-    async function getBalance() {
-      if (publicKey) {
-        try {
-          const balance = await connection.getBalance(publicKey);
-          const balanceInSol = balance / LAMPORTS_PER_SOL;
-          const formattedBalance = balanceInSol < 1 ? balanceInSol.toFixed(6) : (balanceInSol).toFixed(2);
-          setBalance(formattedBalance);
-        } catch (error) {
-          console.log('error', error);
-          toast.error('Insufficient Balance!');
-        }
-      }
-    }
-    async function getWalletInfo() {
-      if (publicKey) {
-        const wallet = await getWallet(publicKey.toBase58());
-        if (wallet?._id) {
-          setReferralCode(wallet?.referralCode);
-          const createdTokenList = await getCreatedTokenList(wallet?._id);
-          const createdLiquidityList = await getCreatedLiquidityList(wallet?._id);
-          const createdSwapList = await getCreatedSwapList(wallet?._id);
-          setCreatedTokens(createdTokenList || []);
-          setCreatedLiquidities(createdLiquidityList || [])
-          setCreatedSwaps(createdSwapList || [])
-        }
-      }
-    }
-  }, [connection, publicKey]);
   
   useEffect(() => {
     if (!connected || !publicKey) {
@@ -139,7 +97,7 @@ function DashboardPage() {
                   <CircleDollarSign className="h-5 w-5" />
                   Liquidity Pools
                 </div>
-                <div className="mt-2 text-2xl font-bold">{createdLiquidities?.length}</div>
+                <div className="mt-2 text-2xl font-bold">{createdLiquidityPools?.length}</div>
               </div>
             </div>
             <div className="space-y-6">
@@ -214,7 +172,7 @@ function DashboardPage() {
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-2xl font-semibold">Liquidity Pool</h3>
                 <span className="rounded-full bg-gray-700 px-3 py-1 text-sm">
-                  {createdLiquidities?.length} Created
+                  {createdLiquidityPools?.length} Created
                 </span>
               </div>
               <div className="overflow-x-auto">
@@ -226,7 +184,7 @@ function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {createdLiquidities?.map((liquidity, index) => (
+                    {createdLiquidityPools?.map((liquidity, index) => (
                       <tr key={index} className="hover:bg-gray-750 border-b border-gray-700">
                         <td className="py-4">
                           <div className="flex items-center gap-3">

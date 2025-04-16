@@ -45,6 +45,7 @@
     "clsx": "^2.1.1",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
+    "jsonfile": "^6.1.0",
     "lucide-react": "^0.479.0",
     "mongodb": "^6.14.2",
     "next": "15.2.2",
@@ -73,6 +74,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4.0.13",
+    "@types/jsonfile": "^6.1.4",
     "@types/mongodb": "^4.0.7",
     "@types/node": "^20",
     "@types/react": "^19",

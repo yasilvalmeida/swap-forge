@@ -8,16 +8,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 import { Dispatch, SetStateAction, useState, useCallback, useMemo } from "react";
-import { ApiV3PoolInfoItem, ApiV3PoolInfoStandardItem } from "@raydium-io/raydium-sdk-v2";
-import { swapToken } from "@/libs/utils/raydium";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey, SystemProgram, Transaction, VersionedTransaction } from "@solana/web3.js";
+import { ApiV3PoolInfoItem } from "@raydium-io/raydium-sdk-v2";
+import { routeSwap } from "@/libs/utils/raydium";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { toast } from "react-toastify";
-import { BN } from "@coral-xyz/anchor";
-import { SWAP_FEE_BPS } from "@/libs/constants/swap";
-import { TREASURY_PUBLIC_KEY } from "@/libs/constants";
 
 interface SwapTokenModalProps {
   open: boolean;
@@ -32,8 +28,7 @@ export const SwapTokenModal = ({
   poolInfoBaseItem
 }: SwapTokenModalProps) => {
 
-  const { publicKey, signTransaction, sendTransaction } = useWallet();
-  const connection = useConnection()
+  const { publicKey } = useWallet()
 
   const [fromAmount, setFromAmount] = useState("");
   const [toAmount, setToAmount] = useState("");
@@ -43,7 +38,7 @@ export const SwapTokenModal = ({
   
   const fixedSide: SwapSide = useMemo(() => 'in', [])
   const fromToken = useMemo(() => poolInfoBaseItem?.mintA.symbol || "SOL", [poolInfoBaseItem?.mintA.symbol]);
-  const fromTokenMint = useMemo(() => poolInfoBaseItem?.mintA.address || "", [poolInfoBaseItem?.mintA.address]);
+  /* const fromTokenMint = useMemo(() => poolInfoBaseItem?.mintA.address || "", [poolInfoBaseItem?.mintA.address]); */
   const toToken = useMemo(() => poolInfoBaseItem?.mintB.symbol || "USDC", [poolInfoBaseItem?.mintB.symbol]);
   /* const toTokenMint = useMemo(() => poolInfoBaseItem?.mintB.address || "", [poolInfoBaseItem?.mintB.address]); */
   const rate = useMemo(() => poolInfoBaseItem?.price ? poolInfoBaseItem.price.toFixed(4) : "0.0",
@@ -55,7 +50,8 @@ export const SwapTokenModal = ({
 
     setLoading(true);
     try {
-      const amountIn = new BN(Number(fromAmount) * 10 ** poolInfoBaseItem.mintA.decimals);
+      await routeSwap();
+      /* const amountIn = new BN(Number(fromAmount) * 10 ** poolInfoBaseItem.mintA.decimals);
       const feeAmount = amountIn.muln(SWAP_FEE_BPS).divn(10000); // Calculate fee
       const swapAmount = amountIn.sub(feeAmount); // Amount after fee
 
@@ -99,14 +95,14 @@ export const SwapTokenModal = ({
         await connection.connection.confirmTransaction(txid);
         
         toast.success(`Swap completed! TX: ${txid}`);
-      }
+      } */
     } catch (error) {
-      console.error("Swap error:", error);
+      console.log("Swap error:", error);
       toast.error("Failed to create swap transaction");
     } finally {
       setLoading(false);
     }
-  }, [publicKey, poolInfoBaseItem, fromAmount, toAmount, fromTokenMint, fixedSide, signTransaction, sendTransaction, connection.connection]);
+  }, [publicKey, poolInfoBaseItem, fromAmount]);
 
   const handleFromAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = !e.target.value ? '0' : e.target.value;
@@ -150,7 +146,7 @@ export const SwapTokenModal = ({
           {/* Swap Arrow */}
           <div className="flex justify-center">
             <Button variant="outline" size="icon" className="rounded-full">
-              <ArrowUpDown className="h-4 w-4" />
+              <ArrowDown className="h-4 w-4" />
             </Button>
           </div>
 

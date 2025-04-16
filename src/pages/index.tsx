@@ -111,12 +111,11 @@ const HomePage = ({
                 Buy 100+ cryptos instantly with cards. Best rates under $1,000.
               </p>
             </div>
-            <Link
-              href='#'
+            <span
               className='w-auto rounded-lg bg-blue-500 px-6 py-3 text-center font-semibold text-white transition duration-300 hover:bg-blue-600'
             >
-              Buy with MoonPay
-            </Link>
+              Comming soon
+            </span>
           </div>
 
           <div className='flex h-52 flex-col justify-between rounded-lg bg-gray-800 p-6 shadow-lg'>
@@ -135,12 +134,11 @@ const HomePage = ({
                 Recurring purchases via bank transfer. Low 0.5% fees.
               </p>
             </div>
-            <Link
-              href='#'
+            <span
               className='w-auto rounded-lg bg-purple-500 px-6 py-3 text-center font-semibold text-white transition duration-300 hover:bg-purple-600'
             >
-              Connect Stripe
-            </Link>
+              Comming soon
+            </span>
           </div>
 
           <div className='flex h-52 flex-col justify-between rounded-lg bg-gray-800 p-6 shadow-lg'>
@@ -159,12 +157,11 @@ const HomePage = ({
                 Sell to bank accounts in 50+ countries. Competitive rates.
               </p>
             </div>
-            <Link
-              href='#'
+            <span
               className='w-auto rounded-lg bg-green-500 px-6 py-3 text-center font-semibold text-white transition duration-300 hover:bg-green-600'
             >
-              Sell with Transak
-            </Link>
+              Comming soon
+            </span>
           </div>
         </div>
       </section>

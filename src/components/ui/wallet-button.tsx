@@ -12,6 +12,8 @@ import {
   MenubarTrigger,
 } from '@/components/ui/menubar';
 import Link from 'next/link';
+import { useWalletInfo } from '../hook';
+
 
 const WalletMultiButton = dynamic(
   () =>
@@ -23,6 +25,8 @@ const WalletMultiButton = dynamic(
 
 const WalletButton = () => {
   const { connected, publicKey, disconnect } = useWallet();
+
+  const { createdTokens, createdLiquidityPools, createdSwaps, balance } = useWalletInfo();
 
   return connected ? (
     <>
@@ -41,6 +45,18 @@ const WalletButton = () => {
                 Dashboard
               </Link>
             </MenubarItem>
+            <MenubarItem className='cursor-pointer text-gray-900'>
+              Balance {balance} SOL
+            </MenubarItem>
+            {createdTokens?.length > 0 && <MenubarItem className='cursor-pointer text-gray-900'>
+              Tokens {createdTokens?.length} created
+            </MenubarItem>}
+            {createdLiquidityPools?.length > 0 && <MenubarItem className='cursor-pointer text-gray-900'>
+              Liquidity Pools {createdLiquidityPools?.length} created
+            </MenubarItem>}
+            {createdSwaps?.length > 0 && <MenubarItem className='cursor-pointer text-gray-900'>
+              Transactions {createdSwaps?.length} created
+            </MenubarItem>}
             <MenubarSeparator />
             <MenubarItem
               onClick={disconnect}
