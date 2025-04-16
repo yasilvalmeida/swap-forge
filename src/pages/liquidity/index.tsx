@@ -31,8 +31,8 @@ import Image from 'next/image';
 import { Label } from '@/components/ui/label';
 import { LiquidityPoolSortDto } from '@/libs/models/liquidity';
 import { isMobile } from 'react-device-detect';
-/* import { useWallet } from '@solana/wallet-adapter-react';
-import { SwapTokenModal } from '@/components/ui/swap/swap-modal'; */
+/* import { useWallet } from '@solana/wallet-adapter-react'; */
+/* import { SwapTokenModal } from '@/components/ui/swap/swap-modal'; */
 
 dotenv.config();
 
@@ -45,7 +45,7 @@ function LiquidityPage() {
     threshold: 0,
   });
 
-  /* const { connected, publicKey } = useWallet(); */
+  /* const { publicKey } = useWallet(); */
 
   const queryClient = useQueryClient();
 

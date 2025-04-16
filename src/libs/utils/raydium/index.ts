@@ -9,29 +9,27 @@ import { toast } from 'react-toastify';
 
 export const txVersion = TxVersion.V0;
 
-const getOwner = (): PublicKey => {
-  const publicKey = process.env.NEXT_PUBLIC_TREASURY_PUBLIC_KEY;
-  if (!publicKey) {
-    if (typeof window === 'undefined') {
-      throw new Error('Server-side environment variable missing');
-    }
-    throw new Error('Wallet configuration error - please refresh the page');
-  }
-  return new PublicKey(publicKey);
-};
-
-const getRaydium = async () => {
+const getRaydium = async (walletPublicKey?: string) => {
   const connection = new Connection(
     process.env.NEXT_PUBLIC_SOLANA_ENDPOINT || 'https://api.devnet.solana.com'
   );
 
-  return Raydium.load({
-    owner: getOwner(),
-    connection,
-    cluster: 'devnet',
-    disableFeatureCheck: true,
-    blockhashCommitment: 'finalized',
-  });
+  if (walletPublicKey) {
+    return Raydium.load({
+      owner: new PublicKey(walletPublicKey),
+      connection,
+      cluster: 'devnet',
+      disableFeatureCheck: true,
+      blockhashCommitment: 'finalized',
+    });
+  } else {
+    return Raydium.load({
+      connection,
+      cluster: 'devnet',
+      disableFeatureCheck: true,
+      blockhashCommitment: 'finalized',
+    });
+  }
 };
 
 const getPoolList = async (props?: FetchPoolParams) => {
@@ -69,5 +67,6 @@ const getPoolList = async (props?: FetchPoolParams) => {
 };
 
 export {
+  getRaydium,
   getPoolList,
 };
