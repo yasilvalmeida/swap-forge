@@ -14,7 +14,6 @@ export const getProvider = (
   signTransaction: (transaction: Transaction | VersionedTransaction) => Promise<Transaction | VersionedTransaction>): Program<TokenContract> | null => { 
   
   if (!publicKey || !signTransaction) {
-    console.log('Wallet not connected or missing signTransaction')
     return null;
   }
 

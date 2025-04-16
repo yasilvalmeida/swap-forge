@@ -11,9 +11,8 @@ import { Label } from "@/components/ui/label";
 import { ArrowDown } from "lucide-react";
 import { Dispatch, SetStateAction, useState, useCallback, useMemo } from "react";
 import { ApiV3PoolInfoItem } from "@raydium-io/raydium-sdk-v2";
-import { routeSwap } from "@/libs/utils/raydium";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { toast } from "react-toastify";
+/* import { toast } from "react-toastify"; */
 
 interface SwapTokenModalProps {
   open: boolean;
@@ -49,59 +48,7 @@ export const SwapTokenModal = ({
     if (!publicKey || !poolInfoBaseItem || !fromAmount) return;
 
     setLoading(true);
-    try {
-      await routeSwap();
-      /* const amountIn = new BN(Number(fromAmount) * 10 ** poolInfoBaseItem.mintA.decimals);
-      const feeAmount = amountIn.muln(SWAP_FEE_BPS).divn(10000); // Calculate fee
-      const swapAmount = amountIn.sub(feeAmount); // Amount after fee
-
-      // 1. Create swap transaction
-      const swapParams = {
-        poolInfo: poolInfoBaseItem as ApiV3PoolInfoStandardItem,
-        amountIn: swapAmount,
-        amountOut: new BN(Number(toAmount) * 10 ** poolInfoBaseItem.mintB.decimals),
-        inputMint: fromTokenMint,
-        fixedSide,
-        txVersion: 0,
-        feePayer: publicKey,
-      };
-
-      const swapResult = await swapToken(swapParams);
-
-      if (!swapResult) throw new Error('Failed tx');
-
-      const transcations = new Transaction();
-      let transaction: Transaction | VersionedTransaction;
-
-      // 2. Add fee transfer instruction
-      if ('transaction' in swapResult) {
-        transaction = swapResult.transaction;
-        
-        const feeTransferIx = SystemProgram.transfer({
-          fromPubkey: swapParams.feePayer || swapParams.inputMint,
-          toPubkey: new PublicKey(TREASURY_PUBLIC_KEY),
-          lamports: feeAmount.toNumber(),
-        });
-        
-        transcations.add(...transaction.instructions);
-        transcations.add(feeTransferIx);
-        transcations.feePayer = swapParams.feePayer;
-      } 
-
-      if (signTransaction) {
-        const signedTx = await signTransaction(transcations);
-        // Send transaction to network
-        const txid = await sendTransaction(signedTx, connection.connection);
-        await connection.connection.confirmTransaction(txid);
-        
-        toast.success(`Swap completed! TX: ${txid}`);
-      } */
-    } catch (error) {
-      console.log("Swap error:", error);
-      toast.error("Failed to create swap transaction");
-    } finally {
-      setLoading(false);
-    }
+    setLoading(false);
   }, [publicKey, poolInfoBaseItem, fromAmount]);
 
   const handleFromAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {

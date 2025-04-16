@@ -26,13 +26,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { formatNumber } from '@/libs/utils';
-import { FilterIcon, FilterX } from 'lucide-react';
+import { ArrowLeftRight, FilterIcon, FilterX, PlusIcon } from 'lucide-react';
 import Image from 'next/image';
 import { Label } from '@/components/ui/label';
 import { LiquidityPoolSortDto } from '@/libs/models/liquidity';
 import { isMobile } from 'react-device-detect';
-/* import { useWallet } from '@solana/wallet-adapter-react';
-import { SwapTokenModal } from '@/components/ui/swap/swap-modal'; */
+import { useWallet } from '@solana/wallet-adapter-react';
+import { SwapTokenModal } from '@/components/ui/swap/swap-modal';
 
 dotenv.config();
 
@@ -45,7 +45,7 @@ function LiquidityPage() {
     threshold: 0,
   });
 
-  /* const { connected, publicKey } = useWallet(); */
+  const { connected, publicKey } = useWallet();
 
   const queryClient = useQueryClient();
 
@@ -55,7 +55,8 @@ function LiquidityPage() {
   const [sort, setSort] = useState<LiquidityPoolSortDto>('liquidity');
   const [order, setOrder] = useState<'asc' | 'desc' | undefined>('desc');
   const [period, setPeriod] = useState<string>('24H');
-  /* const [openSwap, setOpenSwap] = useState<boolean>(false); */
+  const [openSwap, setOpenSwap] = useState<boolean>(false);
+  const [poolInfoBaseItem, setPoolInfoBaseItem] = useState<ApiV3PoolInfoItem>();
 
   const columnHelper = useMemo(
     () => createColumnHelper<ApiV3PoolInfoItem>(),
@@ -153,7 +154,7 @@ function LiquidityPage() {
           <span className='flex justify-start text-sm'>{info.getValue()}</span>
         ),
       }),
-      /* columnHelper.accessor((row) => row, {
+      columnHelper.accessor((row) => row, {
         id: 'actions',
         enableSorting: false,
         header: () => <span className='text-sm'>Swap</span>,
@@ -170,7 +171,7 @@ function LiquidityPage() {
             </Button>
           </div>
         ),
-      }), */
+      }),
     ],
     [columnHelper, period]
   );
@@ -237,7 +238,7 @@ function LiquidityPage() {
         <WalletButton />
       </div>
 
-      {/* <SwapTokenModal open={openSwap} setOpen={setOpenSwap} poolInfoBaseItem={poolInfoBaseItem} /> */}
+      <SwapTokenModal open={openSwap} setOpen={setOpenSwap} poolInfoBaseItem={poolInfoBaseItem} />
 
       <section className='bg-gray-800 px-4 py-2'>
         <div className='mx-auto md:max-w-6xl'>
@@ -362,7 +363,7 @@ function LiquidityPage() {
                 </div>
               )}
             </div>
-            {/* <span>
+            <span>
               {connected && publicKey && <Button
                 onClick={(e) => {
                   e.preventDefault();
@@ -372,7 +373,7 @@ function LiquidityPage() {
                 <PlusIcon className='h-4 w-4' />
                 Create
               </Button>}
-            </span> */}
+            </span>
           </div>
           <div className='relative overflow-hidden rounded-lg border border-purple-900 shadow-lg'>
             <div className='absolute inset-0 shadow-[0_0_20px_5px_rgba(128,0,128,0.5)]'></div>
