@@ -6,7 +6,7 @@ dotenv.config();
 
 const pinata = new PinataSDK({
   pinataJwt: process.env.PINATA_JWT,
-  pinataGateway: 'coffee-defensive-hare-118.mypinata.cloud',
+  pinataGateway: 'ipfs.swapforge.app',
 });
 
 export const uploadFileToPinata = async (
