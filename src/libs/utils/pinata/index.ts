@@ -27,7 +27,7 @@ export const uploadFileToPinata = async (
       .keyvalues({
         uploadedBy: 'SwapForge',
       });
-    return `https://ipfs.swapforge.app/${result.cid}`;
+    return `https://ipfs.swapforge.app/ipfs/${result.cid}`;
   } catch (error) {
     console.log('Error uploading file to Pinata:', error);
     throw error;
