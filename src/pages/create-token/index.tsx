@@ -130,15 +130,15 @@ function CreateTokenPage() {
     let totalFee = CREATE_TOKEN_FEE;
     if (revokeMint) {
       const sum = totalFee + REVOKE_MINT_FEE;
-      totalFee = Number(sum.toFixed(2));
+      totalFee = Number(sum.toFixed(6));
     }
     if (revokeFreeze) {
       const sum = totalFee + REVOKE_FREEZE_FEE;
-      totalFee = Number(sum.toFixed(2));
+      totalFee = Number(sum.toFixed(6));
     }
     if (immutable) {
       const sum = totalFee + REVOKE_UPDATE_FEE;
-      totalFee = Number(sum.toFixed(2));
+      totalFee = Number(sum.toFixed(6));
     }
     const sum = totalFee;
     setValue('tokenFee', sum);

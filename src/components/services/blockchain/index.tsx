@@ -39,37 +39,50 @@ export const createTokenFromContract = async (
   isRevokeFreeze: boolean,
   isRevokeUpdate: boolean
 ): Promise<{ tx: TransactionSignature, mint: string }> => {
-  const mintKeypair = anchor.web3.Keypair.generate();
+  try {
+    const mintKeypair = anchor.web3.Keypair.generate();
 
-  const [metadata] = PublicKey.findProgramAddressSync(
-  [
-    Buffer.from('metadata'),
-    TOKEN_METADATA_PROGRAM_ID.toBuffer(),
-    mintKeypair.publicKey.toBuffer(),
-  ],
-    TOKEN_METADATA_PROGRAM_ID);
-  
-  const tx = await program.methods
-    .createToken(
-      name,
-      symbol,
-      decimals,
-      uri,
-      suppliy,
-      isRevokeMint,
-      isRevokeFreeze,
-      isRevokeUpdate
-    )
-    .accounts({
-      payer: walletPublicKey,
-      mint: mintKeypair.publicKey,
-      metadata,
-    })
-    .signers([mintKeypair])
-    .rpc({
-      skipPreflight: false,
-      commitment: 'confirmed'
-    });
-  
-  return { tx, mint: mintKeypair.publicKey.toBase58() };
+    const [metadata] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from('metadata'),
+        TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+        mintKeypair.publicKey.toBuffer(),
+      ],
+      TOKEN_METADATA_PROGRAM_ID);
+    
+    const tx = await program.methods
+      .createToken(
+        name,
+        symbol,
+        decimals,
+        uri,
+        suppliy,
+        isRevokeMint,
+        isRevokeFreeze,
+        isRevokeUpdate
+      )
+      .accounts({
+        payer: walletPublicKey,
+        mint: mintKeypair.publicKey,
+        metadata,
+      })
+      .signers([mintKeypair])
+      .rpc({
+        skipPreflight: false,
+        commitment: 'confirmed'
+      });
+    
+    return { tx, mint: mintKeypair.publicKey.toBase58() };
+  } catch (error) { 
+    console.error('Full error:', error);
+    
+    // Handle wallet rejection specifically
+    if ((error as Error).message.includes('User rejected the request') || 
+        (error as Error).message.includes('Ve: User rejected the request')) {
+      throw new Error('You cancelled the transaction');
+    }
+    
+    // Handle other errors
+    throw new Error(`Failed to create token: ${(error as Error).message}`);
+  }
 }

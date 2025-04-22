@@ -4,13 +4,14 @@ import { GA_TRACKING_ID, TOAST_TIMEOUT } from '@/libs/constants';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { DefaultSeo } from 'next-seo';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AppAnchorWalletProvider } from '@/components/provider/anchor';
+
 import SEO from '../seo.config';
 import ErrorBoundary from '@/components/layout/error-bondary';
 import dotenv from 'dotenv';
-
+import AppWalletProvider from '@/components/provider/wallet';
 import '@/style/globals.css';
 import 'react-toastify/dist/ReactToastify.css';
+
 
 
 dotenv.config();
@@ -20,7 +21,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <ErrorBoundary>
-      <AppAnchorWalletProvider>
+      <AppWalletProvider>
         <ToastContainer
           position='top-right'
           autoClose={TOAST_TIMEOUT}
@@ -38,7 +39,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <QueryClientProvider client={queryClient}>
           <Component {...pageProps} />
         </QueryClientProvider>
-      </AppAnchorWalletProvider>
+      </AppWalletProvider>
     </ErrorBoundary>
   );
 }
