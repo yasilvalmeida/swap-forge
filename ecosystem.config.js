@@ -5,6 +5,7 @@ module.exports = {
     {
       name,
       script: 'npm start',
+      cwd: './web-app',
       instances: 1,
       autorestart: true,
       watch: false,
@@ -26,7 +27,7 @@ module.exports = {
       path: '/home/webapp/swapforge',
       'pre-deploy-local': '',
       'post-deploy':
-        'export APP_ENV=production && yarn && yarn build && pm2 reload /home/webapp/swapforge/ecosystem.config.js --env production && pm2 save',
+        'cd web-app && export APP_ENV=production && yarn && yarn build && cd .. && pm2 reload ecosystem.config.js --env production && pm2 save',
       'pre-setup': '',
       ssh_options: 'ForwardAgent=yes',
     },
