@@ -7,26 +7,66 @@ jobs:
   build:
     docker:
       - image: cimg/node:22.14
+    working_directory: ~/project/web-app
     steps:
-      - checkout
+      - checkout:
+          path: ~/project
       - node/install-packages:
           pkg-manager: yarn
-      - setup_remote_docker
       - run:
           name: Run build
           command: yarn build
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - web-app/.next
+            - web-app/node_modules
+            - web-app/package.json
+            - web-app/public
+            - web-app/next.config.ts
+            - web-app/ecosystem.config.js
+            - web-app/yarn.lock
 
   deploy:
     machine:
-      image: ubuntu-2204:edge
+      image: ubuntu-2204:2024.01.1
     steps:
+      - checkout
+      - attach_workspace:
+          at: ~/project
       - add_ssh_keys:
           fingerprints:
-            - 'S0V13pVA2H11zkJ1o7ixLfo78Hvz18bOGurDCzIjZwQ'
+            - 'S0:V1:3p:VA:2H:11:zk:J1:o7:ix:Lf:o7:8H:vz:18:bO'
       - run:
-          name: Deploy using SSH
-          command: | 
-            ssh -A -o StrictHostKeyChecking=no -o BatchMode=yes $SSH_USER@$SSH_HOST "cd /home/webapp/swapforge && sudo npm i -g pm2 yarn && pm2 deploy /home/webapp/swapforge/ecosystem.config.js production"
+          name: Deploy to server
+          command: |
+            set -e  # Exit on any error
+
+            echo "Starting deployment to $SSH_HOST..."
+
+            # Create deployment directory if it doesn't exist
+            ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "mkdir -p /home/webapp/swapforge"
+
+            # Create backup of current deployment
+            ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST \
+              "cd /home/webapp && [ -d swapforge ] && cp -r swapforge swapforge.backup.$(date +%Y%m%d_%H%M%S) || true"
+
+            # Sync the built application (excluding sensitive files)
+            rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
+              --exclude='.env*' \
+              --exclude='node_modules' \
+              ~/project/web-app/ \
+              $SSH_USER@$SSH_HOST:/home/webapp/swapforge/
+
+            # Install dependencies and restart the application
+            ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST \
+              "cd /home/webapp/swapforge && \
+               export APP_ENV=production && \
+               npm install -g pm2 yarn && \
+               yarn install --production --frozen-lockfile && \
+               pm2 startOrRestart ecosystem.config.js --env production && \
+               pm2 save && \
+               echo 'Deployment completed successfully'"
 
 workflows:
   build-and-deploy:

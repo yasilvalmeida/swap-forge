@@ -19,7 +19,7 @@ module.exports = {
   deploy: {
     production: {
       user: 'root',
-      host: '203.161.46.54',
+      host: '203.161.38.116',
       ref: 'origin/main',
       repo: 'git@github.com:yasilvalmeida/swap-forge.git',
       fetch: 'all',
