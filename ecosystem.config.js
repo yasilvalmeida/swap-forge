@@ -26,6 +26,7 @@ module.exports = {
       fetch: 'all',
       path: '/home/webapp/swapforge',
       'pre-deploy-local': '',
+      'pre-deploy': 'git reset --hard && git clean -fd',
       'post-deploy':
         'cd web-app && export APP_ENV=production && yarn && yarn build && cd .. && pm2 reload ecosystem.config.js --env production && pm2 save',
       'pre-setup': '',
