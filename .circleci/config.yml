@@ -16,17 +16,37 @@ jobs:
       - run:
           name: Run build
           command: yarn build
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - web-app/.next
+            - web-app/package.json
+            - web-app/public
+            - web-app/next.config.ts
+            - web-app/ecosystem.config.js
+            - web-app/yarn.lock
+            - web-app/src
 
   deploy:
     machine:
       image: ubuntu-2204:2024.01.1
     steps:
-      - checkout
       - attach_workspace:
           at: ~/project
       - add_ssh_keys:
           fingerprints:
             - 'S0:V1:3p:VA:2H:11:zk:J1:o7:ix:Lf:o7:8H:vz:18:bO'
+      - run:
+          name: Debug workspace contents
+          command: |
+            echo "Home directory: $HOME"
+            echo "Current directory: $(pwd)"
+            echo "Contents of ~/project:"
+            ls -la ~/project/ || echo "~/project not found"
+            echo "Contents of ~/project/web-app:"
+            ls -la ~/project/web-app/ || echo "~/project/web-app not found"
+            echo "Looking for package.json:"
+            find ~/project -name "package.json" -type f || echo "No package.json found"
       - run:
           name: Deploy to server
           command: |
