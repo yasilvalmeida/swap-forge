@@ -16,16 +16,6 @@ jobs:
       - run:
           name: Run build
           command: yarn build
-      - persist_to_workspace:
-          root: ~/project
-          paths:
-            - web-app/.next
-            - web-app/node_modules
-            - web-app/package.json
-            - web-app/public
-            - web-app/next.config.ts
-            - web-app/ecosystem.config.js
-            - web-app/yarn.lock
 
   deploy:
     machine:
