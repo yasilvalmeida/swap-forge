@@ -28,7 +28,7 @@ module.exports = {
       'pre-deploy-local': '',
       'pre-deploy': 'git reset --hard && git clean -fd',
       'post-deploy':
-        'cd web-app && export APP_ENV=production && yarn && yarn build && cd .. && pm2 reload ecosystem.config.js --env production && pm2 save',
+        'cd web-app && export APP_ENV=production && yarn && yarn build && pm2 reload ecosystem.config.js --env production && pm2 save',
       'pre-setup': '',
       ssh_options: 'ForwardAgent=yes',
     },
