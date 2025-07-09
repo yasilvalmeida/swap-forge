@@ -47,7 +47,7 @@ jobs:
             chmod 600 ~/.ssh/known_hosts
 
             echo "Testing SSH connection to production server..."
-            ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 root@203.161.38.116 "echo 'SSH connection test successful'"
+            ssh -v -o StrictHostKeyChecking=no -o ConnectTimeout=30 root@203.161.38.116 "echo 'SSH connection test successful'"
       - run:
           name: Deploy to Production Server - Setup Repository
           command: |
@@ -55,22 +55,22 @@ jobs:
             echo "Setting up repository on production server..."
 
             # Check if swapforge directory exists and has git repository with correct remote
-            ssh root@203.161.38.116 "cd /home/webapp && if [ ! -d 'swapforge' ] || [ ! -d 'swapforge/.git' ]; then echo 'SwapForge directory or git repository not found. Cloning...' && rm -rf swapforge && git clone git@github.com:yasilvalmeida/swap-forge.git swapforge; else echo 'SwapForge directory exists. Checking remote configuration...' && cd swapforge && if git remote get-url origin | grep -q 'yasilvalmeida/swap-forge'; then echo 'Remote origin is correct. Pulling latest changes...' && git fetch origin && git reset --hard origin/main; else echo 'Remote origin is incorrect. Re-cloning repository...' && cd .. && rm -rf swapforge && git clone git@github.com:yasilvalmeida/swap-forge.git swapforge; fi; fi"
+            ssh -v root@203.161.38.116 "cd /home/webapp && if [ ! -d 'swapforge' ] || [ ! -d 'swapforge/.git' ]; then echo 'SwapForge directory or git repository not found. Cloning...' && rm -rf swapforge && git clone git@github.com:yasilvalmeida/swap-forge.git swapforge; else echo 'SwapForge directory exists. Checking remote configuration...' && cd swapforge && if git remote get-url origin | grep -q 'yasilvalmeida/swap-forge'; then echo 'Remote origin is correct. Pulling latest changes...' && git fetch origin && git reset --hard origin/main; else echo 'Remote origin is incorrect. Re-cloning repository...' && cd .. && rm -rf swapforge && git clone git@github.com:yasilvalmeida/swap-forge.git swapforge; fi; fi"
       - run:
           name: Deploy to Production Server - Install Dependencies
           command: |
             echo "Installing dependencies on production server..."
-            ssh root@203.161.38.116 "cd /home/webapp/swapforge/web-app && yarn install --frozen-lockfile --network-timeout 100000"
+            ssh -v root@203.161.38.116 "cd /home/webapp/swapforge/web-app && yarn install --frozen-lockfile --network-timeout 100000"
       - run:
           name: Deploy to Production Server - Build Application
           command: |
             echo "Building application on production server..."
-            ssh root@203.161.38.116 "cd /home/webapp/swapforge/web-app && export APP_ENV=production && yarn build"
+            ssh -v root@203.161.38.116 "cd /home/webapp/swapforge/web-app && export APP_ENV=production && yarn build"
       - run:
           name: Deploy to Production Server - Reload PM2
           command: |
             echo "Reloading PM2 on production server..."
-            ssh root@203.161.38.116 "cd /home/webapp/swapforge && pm2 reload ecosystem.config.js --env production && pm2 save"
+            ssh -v root@203.161.38.116 "cd /home/webapp/swapforge && pm2 reload ecosystem.config.js --env production && pm2 save"
             echo "Deployment completed successfully!"
 
 workflows:
