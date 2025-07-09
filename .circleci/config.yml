@@ -19,13 +19,59 @@ jobs:
     machine:
       image: ubuntu-2204:2024.01.1
     steps:
+      - attach_workspace:
+          at: ~/project
       - add_ssh_keys:
           fingerprints:
-            - 'S0:V1:3p:VA:2H:11:zk:J1:o7:ix:Lf:o7:8H:vz:18:bO'
+            - 'SHA256:uPAJsXgbS3As3+NN97LYxt1PFtmQTAU2DG0GWErjB5A'
       - run:
-          name: Deploy using SSH
+          name: Setup SSH config
           command: |
-            ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "cd /home/webapp/swapforge && npm i -g pm2 yarn && pm2 deploy /home/webapp/swapforge/ecosystem.config.js production"
+            mkdir -p ~/.ssh
+            echo "Host swapforge-server" >> ~/.ssh/config
+            echo "  HostName 203.161.38.116" >> ~/.ssh/config
+            echo "  User root" >> ~/.ssh/config
+            echo "  IdentityFile ~/.ssh/id_rsa_*" >> ~/.ssh/config
+            echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+            chmod 600 ~/.ssh/config
+      - run:
+          name: Deploy to server
+          command: |
+            set -e
+
+            echo "🚀 Starting deployment to SwapForge server..."
+
+            # Create deployment directory if it doesn't exist
+            ssh swapforge-server "mkdir -p /home/webapp/swapforge"
+
+            # Backup current deployment
+            ssh swapforge-server "cd /home/webapp && [ -d swapforge/current ] && cp -r swapforge/current swapforge/backup.\$(date +%Y%m%d_%H%M%S) || true"
+
+            # Sync the built application
+            echo "📦 Syncing application files..."
+            rsync -avz -e "ssh" \
+              --exclude='.env*' \
+              --exclude='node_modules' \
+              --exclude='.git' \
+              ~/project/web-app/ \
+              swapforge-server:/home/webapp/swapforge/current/
+
+            # Copy environment file
+            echo "🔧 Setting up environment..."
+            ssh swapforge-server "cp /home/webapp/swapforge/.env /home/webapp/swapforge/current/"
+
+            # Install dependencies and restart
+            echo "⚙️ Installing dependencies and starting application..."
+            ssh swapforge-server "cd /home/webapp/swapforge/current && \
+              export APP_ENV=production && \
+              yarn install --production --frozen-lockfile && \
+              yarn build && \
+              cd /home/webapp/swapforge && \
+              pm2 reload ecosystem.config.js --env production && \
+              pm2 save && \
+              echo '✅ Deployment completed successfully!'"
+
+            echo "🎉 SwapForge deployment completed!"
 
 workflows:
   build-and-deploy:

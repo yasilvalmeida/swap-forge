@@ -17,20 +17,4 @@ module.exports = {
       },
     },
   ],
-  deploy: {
-    production: {
-      user: 'root',
-      host: '203.161.38.116',
-      ref: 'origin/main',
-      repo: 'git@github.com:yasilvalmeida/swap-forge.git',
-      fetch: 'all',
-      path: '/home/webapp/swapforge',
-      'pre-deploy-local': '',
-      'pre-deploy': 'git reset --hard && git clean -fd',
-      'post-deploy':
-        'cp .env current/ && cd current && export APP_ENV=production && yarn && yarn build && cd .. && pm2 reload ecosystem.config.js --env production && pm2 save',
-      'pre-setup': '',
-      ssh_options: 'ForwardAgent=yes',
-    },
-  },
 };
