@@ -37,7 +37,7 @@ jobs:
           pkg-manager: yarn
       - add_ssh_keys:
           fingerprints:
-            - 'SHA256:ZPPfybvIJHqoRHN9+qLaI5QDOMs/c39p1vJn+0U+DbM'
+            - 'SHA256:Uk7sQsoX0wmkIaFf2ujIF62OMoA4kIzhzmzC+PZ72rM'
       - run:
           name: Setup SSH and test connection
           command: |
