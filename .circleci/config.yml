@@ -37,18 +37,17 @@ jobs:
           pkg-manager: yarn
       - add_ssh_keys:
           fingerprints:
-            - 'SHA256:uPAJsXgbS3As3+NN97LYxt1PFtmQTAU2DG0GWErjB5A'
+            - 'SHA256:Uk7sQsoX0wmkIaFf2ujIF62OMoA4kIzhzmzC+PZ72rM'
       - run:
-          name: Add to known hosts
+          name: Setup SSH and test connection
           command: |
-            echo "Adding production server to known hosts..."
+            echo "Setting up SSH configuration..."
+            mkdir -p ~/.ssh
             ssh-keyscan -H 203.161.38.116 >> ~/.ssh/known_hosts
-            echo "Known hosts updated successfully"
-      - run:
-          name: Test SSH connection
-          command: |
+            chmod 600 ~/.ssh/known_hosts
+
             echo "Testing SSH connection to production server..."
-            ssh -v -o ConnectTimeout=30 root@203.161.38.116 "echo 'SSH connection test successful'"
+            ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 root@203.161.38.116 "echo 'SSH connection test successful'"
       - run:
           name: Deploy to Production Server - Setup Repository
           command: |
