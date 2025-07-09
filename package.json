@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:ci": "echo 'No tests configured yet'"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.0",

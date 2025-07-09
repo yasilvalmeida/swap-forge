@@ -5,7 +5,7 @@ module.exports = {
     {
       name,
       script: 'npm start',
-      cwd: './current',
+      cwd: './web-app',
       instances: 1,
       autorestart: true,
       watch: false,

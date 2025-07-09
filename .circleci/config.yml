@@ -4,82 +4,93 @@ orbs:
   node: circleci/node@5.2.0
 
 jobs:
-  build:
+  build-and-test:
     docker:
-      - image: cimg/node:22.14
+      - image: cimg/node:18.17.0
+        environment:
+          NODE_OPTIONS: '--max-old-space-size=4096'
+    resource_class: medium+
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: install dependencies
+          command: yarn
+      - run:
+          name: Run tests
+          command: |
+            export NODE_OPTIONS="--max-old-space-size=4096"
+            timeout 300 yarn test:ci || exit 0
       - run:
           name: Run build
           command: yarn build
 
-  deploy:
-    machine:
-      image: ubuntu-2204:2024.01.1
+  deploy-production:
+    docker:
+      - image: cimg/node:18.17.0
     steps:
-      - attach_workspace:
-          at: ~/project
+      - checkout
+      - node/install-packages:
+          pkg-manager: yarn
       - add_ssh_keys:
           fingerprints:
             - 'SHA256:uPAJsXgbS3As3+NN97LYxt1PFtmQTAU2DG0GWErjB5A'
       - run:
-          name: Setup SSH config
+          name: Add to known hosts
           command: |
-            mkdir -p ~/.ssh
-            echo "Host swapforge-server" >> ~/.ssh/config
-            echo "  HostName 203.161.38.116" >> ~/.ssh/config
-            echo "  User root" >> ~/.ssh/config
-            echo "  IdentityFile ~/.ssh/id_rsa_*" >> ~/.ssh/config
-            echo "  StrictHostKeyChecking no" >> ~/.ssh/config
-            chmod 600 ~/.ssh/config
+            echo "Adding production server to known hosts..."
+            ssh-keyscan -H 203.161.38.116 >> ~/.ssh/known_hosts
+            echo "Known hosts updated successfully"
       - run:
-          name: Deploy to server
+          name: Test SSH connection
           command: |
-            set -e
+            echo "Testing SSH connection to production server..."
+            ssh -v -o ConnectTimeout=30 root@203.161.38.116 "echo 'SSH connection test successful'"
+      - run:
+          name: Deploy to Production Server - Setup Repository
+          command: |
+            echo "Starting deployment process..."
+            echo "Setting up repository on production server..."
 
-            echo "🚀 Starting deployment to SwapForge server..."
-
-            # Create deployment directory if it doesn't exist
-            ssh swapforge-server "mkdir -p /home/webapp/swapforge"
-
-            # Backup current deployment
-            ssh swapforge-server "cd /home/webapp && [ -d swapforge/current ] && cp -r swapforge/current swapforge/backup.\$(date +%Y%m%d_%H%M%S) || true"
-
-            # Sync the built application
-            echo "📦 Syncing application files..."
-            rsync -avz -e "ssh" \
-              --exclude='.env*' \
-              --exclude='node_modules' \
-              --exclude='.git' \
-              ~/project/web-app/ \
-              swapforge-server:/home/webapp/swapforge/current/
-
-            # Copy environment file
-            echo "🔧 Setting up environment..."
-            ssh swapforge-server "cp /home/webapp/swapforge/.env /home/webapp/swapforge/current/"
-
-            # Install dependencies and restart
-            echo "⚙️ Installing dependencies and starting application..."
-            ssh swapforge-server "cd /home/webapp/swapforge/current && \
-              export APP_ENV=production && \
-              yarn install --production --frozen-lockfile && \
-              yarn build && \
-              cd /home/webapp/swapforge && \
-              pm2 reload ecosystem.config.js --env production && \
-              pm2 save && \
-              echo '✅ Deployment completed successfully!'"
-
-            echo "🎉 SwapForge deployment completed!"
+            # Check if swapforge directory exists and has git repository with correct remote
+            ssh root@203.161.38.116 "cd /home/webapp && if [ ! -d 'swapforge' ] || [ ! -d 'swapforge/.git' ]; then echo 'SwapForge directory or git repository not found. Cloning...' && rm -rf swapforge && git clone git@github.com:yasilvalmeida/swap-forge.git swapforge; else echo 'SwapForge directory exists. Checking remote configuration...' && cd swapforge && if git remote get-url origin | grep -q 'yasilvalmeida/swap-forge'; then echo 'Remote origin is correct. Pulling latest changes...' && git fetch origin && git reset --hard origin/main; else echo 'Remote origin is incorrect. Re-cloning repository...' && cd .. && rm -rf swapforge && git clone git@github.com:yasilvalmeida/swap-forge.git swapforge; fi; fi"
+      - run:
+          name: Deploy to Production Server - Install Dependencies
+          command: |
+            echo "Installing dependencies on production server..."
+            ssh root@203.161.38.116 "cd /home/webapp/swapforge/web-app && yarn install --frozen-lockfile --network-timeout 100000"
+      - run:
+          name: Deploy to Production Server - Build Application
+          command: |
+            echo "Building application on production server..."
+            ssh root@203.161.38.116 "cd /home/webapp/swapforge/web-app && export APP_ENV=production && yarn build"
+      - run:
+          name: Deploy to Production Server - Reload PM2
+          command: |
+            echo "Reloading PM2 on production server..."
+            ssh root@203.161.38.116 "cd /home/webapp/swapforge && pm2 reload ecosystem.config.js --env production && pm2 save"
+            echo "Deployment completed successfully!"
 
 workflows:
-  build-and-deploy:
+  build:
     jobs:
-      - build
-      - deploy:
-          requires:
-            - build
+      - build-and-test:
           filters:
             branches:
+              ignore:
+                - main
+
+  production:
+    jobs:
+      - build-and-test:
+          filters: &filters-production
+            branches:
               only: main
+      - deploy-production:
+          filters:
+            <<: *filters-production
+          requires:
+            - 'build-and-test'
