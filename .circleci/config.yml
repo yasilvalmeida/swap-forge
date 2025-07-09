@@ -6,7 +6,7 @@ orbs:
 jobs:
   build-and-test:
     docker:
-      - image: cimg/node:20.14
+      - image: cimg/node:22.14
         environment:
           NODE_OPTIONS: '--max-old-space-size=4096'
     resource_class: medium+
@@ -30,7 +30,7 @@ jobs:
 
   deploy-production:
     docker:
-      - image: cimg/node:20.14
+      - image: cimg/node:22.14
     steps:
       - checkout
       - node/install-packages:
