@@ -60,12 +60,12 @@ jobs:
           name: Deploy to Production Server - Install Dependencies
           command: |
             echo "Installing dependencies on production server..."
-            ssh -v root@203.161.38.116 "cd /home/webapp/swapforge/web-app && yarn install --frozen-lockfile --network-timeout 100000"
+            ssh -v root@203.161.38.116 "cd /home/webapp/swapforge && yarn install --frozen-lockfile --network-timeout 100000"
       - run:
           name: Deploy to Production Server - Build Application
           command: |
             echo "Building application on production server..."
-            ssh -v root@203.161.38.116 "cd /home/webapp/swapforge/web-app && export APP_ENV=production && yarn build"
+            ssh -v root@203.161.38.116 "cd /home/webapp/swapforge && export APP_ENV=production && yarn build"
       - run:
           name: Deploy to Production Server - Reload PM2
           command: |
